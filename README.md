@@ -209,13 +209,16 @@ Creates a blinking IR strobe on units
 groups\<string>\<group>: can be either a reference to a group table, or the name of the group as a string  
 onoff\<boolean>: if true then sets the strobe on, if false sets it off, if nil then toggles it (on if currently off, off if currently on)  
 interval\<number>: time interval that the ir light is on/off eg a interval of 1 would be 1 seond on then 1 second off, personally I find 0.15 or 0.2 works well (note overly long intervals will look strange)  
+location\<Vec3>: the strobe is attached at this Vec3 point in model local coordinates, nil for a default strobe above the unit
 Example:  
 ```lua
-WT.strobe.toggleStrobe("infantry-1",true,0.2) --will turn on the strobe for a group named 'infantry-1' with a 0.2 second interval
-WT.strobe.toggleStrobe("infantry-2",nil,0.2) --will toggle the strobe on/off for 'infantry-2' if turning on it will use a interval of 0.2 seconds
+WT.strobe.toggleStrobe("infantry-1",true,0.2,nil) --will turn on a default strobe for a group named 'infantry-1' with a 0.2 second interval
+WT.strobe.toggleStrobe("infantry-2",nil,0.2,nil) --will toggle a default strobe on/off for 'infantry-2' if turning on it will use a interval of 0.2 seconds
+WT.strobe.toggleStrobe("Blackhawks",true,0.2,{x=-10.3,y=2.15,z=0}) --turn on strobes on top of the tail fins of all UH-60A Blackhawk units of the group
+WT.strobe.toggleStrobe("Kiowas",true,0.2,{x=-6.85,y=1.8,z=0.14}) --turn on strobes on top of the tail fins of all OH-58D Kiowa Warrior units of the group
 ```
-Final example is meant to be used in a "do script" advanced waypoint action, allows you to toggle based on waypoints instead of normal triggers  
+Final example is meant to be used in a "do script" advanced waypoint action
 ```lua
 local grp = ... --this gets the current group
-WT.strobe.toggleStrobe(grp,true,0.2) --toggles on the strobe for the group in question
+WT.strobe.toggleStrobe(grp,true,0.2,{x=-1,y=1,z=0}) --toggles on a strobe 1 meter above and 1 meter back to the local coordinate origin of each unit of the group in question
 ```
