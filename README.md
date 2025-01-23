@@ -6,25 +6,25 @@ WirtsTools is a amalgamation of various little functions and features that I hav
 *   [How to use](#how-to-use)
 *   [Features](#features)
     *   [weapon](#weapon-features)
-        *   [impactInZone](#impactinzone)
-        *   [impactNear](#impactnear)
-	    *   [near](#near)
-	    *   [inZone](#inzone)
-        *   [hit](#hit)
-    *   [popFlare](#popflare)
-    *   [playerNear](#playernear)
-    *   [coverMe](#coverme)
-    *   [invisAlt](#invisalt)
+        *   [Weapon Impact In Zone](#weapon-impact-in-zone)
+        *   [Weapon Impact Near](#weapon-impact-near)
+	    *   [Weapon Near](#weapon-near)
+	    *   [Weapon in None](#weapon-in-zone)
+        *   [Weapon Hit](#weapon-hit)
+    *   [popFlare](#pop-flare)
+    *   [playerNear](#player-near)
+    *   [coverMe](#cover-me)
+    *   [invisAlt](#invis-alt)
     *   [suppression](#suppression)
-    *   [missileDeath](#missiledeath)
+    *   [missileDeath](#missile-death)
     *   [killSwitch](#killswitch)
     *   [tasking](#tasking)
-    *   [stormtrooperAA](#stormtrooperaa)
+    *   [stormtrooperAA](#stormtrooper-aa)
     *   [shelling](#shelling)
     *   [MLRS](#mlrs)
-    *   [percentAlive](#percentalive)
-    *   [ejectionCleanup](#ejectioncleanup)
-    *   [IRStrobe](#irstrobe)
+    *   [percentAlive](#percent-alive)
+    *   [ejectionCleanup](#ejection-cleanup)
+    *   [IRStrobe](#ir-strobe)
 
 ## Disclaimer
 Note that this script is provided as is with no guarantee of function nor promise of support, use at your own risk
@@ -33,7 +33,8 @@ Note that this script is provided as is with no guarantee of function nor promis
 Simply run the script with a triggered "Do Script File" then call the relevant setup functions in a "Do Script" for the features you wish to use
 
 ## Features
-### weapon features
+
+### Weapon Features
 Starting in version 2.2.0 WirtsTools includes a specific grouping of features under `WT.weapon`, these are generally features that set flag values based on weapon behaviour (weapon impacts the ground in a zone, or gets near a unit etc)
 
 These features all use a common filter system to define the weapon types you are interested in. So to get started with any of these features you need to start with defining a filter.
@@ -124,7 +125,7 @@ A final point on performance, I did a lot to minimize impact, and indeed you sho
 
 Right ok, lets talk the actual instance types....
 
-### impactInZone
+### Weapon Impact in Zone
 This feature is designed to detect when a weapon impacts the ground in a zone, (note that for performance reasons impact is defined as the weapon being destroyed within 15meters of the ground).
 
 This works with both poly and circular zones, and will increment a flag with each weapon impact in the zone that matches the filter
@@ -141,7 +142,7 @@ WT.weapon.impactInZone(filter,"impact_zone","impactCounter")
 ```
 this will increment a flag called "impactCounter" with each impact in a zone called "impact_zone" that matches the defined filter
 
-### impactNear
+### Weapon Impact Near
 This feature is designed to detect when a weapon impacts the ground near a unit or group, (note that for performance reasons impact is defined as the weapon being destroyed within 15meters of the ground).
 
 This will increment a flag with each weapon impact within a deifned range of either a single unit, or any unit in a group, that matches the defined filter
@@ -159,7 +160,7 @@ WT.weapon.impactNear("badGuy-1",filter,100,"impactCounter")
 ```
 this will increment a flag called "impactCounter" with each impact within 100 meters of any unit in the group named "badGuy-1" which match the provided filter
 
-### near
+### Weapon Near
 This feature is designed to detect when a weapon flies near a target
 
 This will set a flag based on the amount of weapons currently within a given range from target, it accepts groups or units but for performance reasons when using a group it only uses the group leader for checks
@@ -177,7 +178,7 @@ WT.weapon.near("badGuy-1",filter,500,"weaponsNear")
 ```
 this will keep a flag called "weaponsNear" set to a count of the amount of weapons within 500 meters of the leader of the group named "badGuy-1" which match the provided filter
 
-### inZone
+### Weapon in Zone
 This feature is designed to detect weapons in a zone
 
 This will set a flag based on the amount of weapons currently within a given zone
@@ -194,7 +195,7 @@ WT.weapon.inZone(filter,"ADIZ_1","weaponsInADIZ")
 ```
 This will keep a flag called "weaponsInADIZ" set to a count of the amount of weapons within a zone called "ADIZ_1"
 
-### hit
+### Weapon Hit
 This feature is designed increment a flag for each time a weapon hits a given target
 
 This is really designed for very large targets like ships where impactNear with a very small distance isnt appropriate as a proxy for a hit
@@ -215,14 +216,14 @@ WT.weapon.hit("BadShip-1",filter,"hits_on_ship")
 ```
 This will increment a flag called "hits_on_ship" for each weapon that hits the unit named "BadShip-1" which passes the provided filter
 
-### popFlare
+### Pop Flare
 This is a simple script that will give your players a F10 option to fire a signal flare (choosing a colour), init function is
 ```lua
 WT.popFlare.setup(side)
 ```
 side\<number>: Which side to apply to, use 1 for redfor, 2 for blufor  
 run multiple times if you want it to work for both sides
-### playerNear
+### Player Near
 Increment a flag for every second that a player is within a defined distance of a defined AI group
 ```lua
 WT.playerNear.setup(target_group,player_groups, flag, distance)
@@ -237,7 +238,7 @@ WT.playerNear.setup("target-1",2,"flag1",1000) --this will increment flag1 whene
 WT.playerNear.setup("target-1",{"player"},"flag2",500) --this will increment the flag only when the specific given group is within range
 ```
 
-### coverMe
+### Cover Me
 renders players invisible when there is a allied AI aircraft within a defined range of the player
 ```lua
 WT.coverMe.setup(group,coalition,distance)
@@ -246,7 +247,7 @@ group\<string>: group that is covered by AI (1 or 2 for all player redfor or pla
 coalition\<number>: coalition of AI players you want to be able to provide cover  
 distance\<number>: distance in meters they must be within to be covered  
 
-### invisAlt
+### Invis Alt
 Toggles invisibility when units go below a given AGL, note that since invis is at a group level this
 only works properly when each unit is in a group of 1
 ```lua
@@ -255,7 +256,7 @@ WT.invisAlt.setup(alt,side)
 alt\<number>: altitude (AGL) below which a group should be invisible  
 side\<number>: coalition enum (1 for red or 2 for blue) will apply to all players on that side  
 
-### suppression
+### Suppression
 suppresses ground units when they are shot at, not that it has no wway of knowing the current ROEs so if they are already weapons hold they will go weapons free when shot, after suppression ends as a result,is extremely basic, all hits work so yes infantry can suppress a tank, will iterate on later
 ```lua
 WT.suppression.setup(hit,kill,all,side,ai)
@@ -272,7 +273,7 @@ WT.suppression.setup(2,5,true,1,false) --2 seconds suppression on hit, 5 on unit
 WT.suppression.setup(2,5,false,1,false) --2 seconds suppression on hit, 5 on unit death, apply to only ground units whose group name starts with SUP_, in red coalition, and only apply it if shot by a player
 ```
 
-### missileDeath  
+### Missile Death  
 simple function that makes sure that any unit hit by a missile dies (good for time rtavel missions, warbirds are weirdly resilient to missiles)
 ```lua
 WT.missileDeath.setup()
@@ -291,7 +292,7 @@ name\<string>: name of the radio option
 flag\<string>: flag to set when pressed  
 singleUse\<bool>: true makes the option disappear once used
   
-### tasking  
+### Tasking  
 Call when you want to drop a new mission into a group, designed to have taskings defined via late activation groups you never activate
 ```lua
 WT.tasking.task(group,task,relative)
@@ -300,7 +301,7 @@ group\<string>: name of the group you want to task
 task\<string>: name of the group whose tasking you want to clone (must start with 'TASK_')
 relative\<boolean>:  whether you want the task waypoints to be shifted so the path is the same shape as defined but starting where the group is (true), or keep tasking waypoints in defined locations (false)   
   
-### stormtrooperAA  
+### Stormtrooper AA  
 Makes designated AA units shoot in the vincinity of valid targets instead of at them, note that at this time there is a bug where units tasked to fire at point will ignore that order if there is a valid target nearby, meaning to use this properly for now your targets need to be invisible
 ```lua
 WT.stormtrooperAA.setup(side,shooters,advancedLOS)
@@ -313,7 +314,7 @@ Example
 WT.stormtrooperAA.setup(2,1,true) --will give red shooting blue using advanced LOS
 ```  
   
-### shelling  
+### Shelling  
 Like the vanilla shelling zone, but instead generates a sustained barrage within the target zone (only for circular zones)  
 ```lua
 WT.shelling.setup(zone,rate,safe,flag)
@@ -339,7 +340,7 @@ WT.MLRS.setup({"SMERCH-1","SMERCH-2","SMERCH-3"}) --will function only when MLRS
 WT.MLRS.setup(nil) --will function on all MLRS launches
 ```  
 
-### percentAlive  
+### Percent Alive  
 Updates a flag with the overal percent (0 - 100) of the units in the designated groups that are alive.  
 ```lua
 WT.percentAlive.setup(groups,flag)
@@ -351,14 +352,14 @@ Example
 WT.percentAlive.setup({"SMERCH-1","SMERCH-2","SMERCH-3"},"smerch_groups") --will update a flag called 'smerch_groups' based on the percentage of the those groups that are alive
 ```  
 
-### EjectionCleanup
+### Ejection Cleanup
 Simple feature that deletes 50% of ejected pilots immediately and the rest after a minute  
 Example:  
 ```lua
 WT.eject.init()
 ```  
 
-### IRStrobe
+### IR Strobe
 Creates a blinking IR strobe on units  
 groups\<string>\<group>: can be either a reference to a group table, or the name of the group as a string  
 onoff\<boolean>: if true then sets the strobe on, if false sets it off, if nil then toggles it (on if currently off, off if currently on)  
