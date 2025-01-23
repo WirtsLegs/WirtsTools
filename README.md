@@ -149,10 +149,10 @@ This feature is designed to detect when a weapon impacts the ground near a unit 
 
 This will increment a flag with each weapon impact within a deifned range of either a single unit, or any unit in a group, that matches the defined filter
 
-target<String>: Name of a unit or group, the function first looks for a unit with this name, if none found it will look for a group with that name.
-filter<WT.weapon.filter>: Pass it a filter 
-range<Integer>: distance in meters th eimpact must be within to trigger
-flag<String>: name of the flag to use
+target\<String>: Name of a unit or group, the function first looks for a unit with this name, if none found it will look for a group with that name.
+filter\<WT.weapon.filter>: Pass it a filter 
+range\<Integer>: distance in meters th eimpact must be within to trigger
+flag\<String>: name of the flag to use
 ```lua
 WT.weapon.impactNear(target,filter,range,flag)
 ```
@@ -167,10 +167,10 @@ This feature is designed to detect when a weapon flies near a target
 
 This will set a flag based on the amount of weapons currently within a given range from target, it accepts groups or units but for performance reasons when using a group it only uses the group leader for checks
 
-target<String>: Name of a unit or group, the function first looks for a unit with this name, if none found it will look for a group with that name.
-filter<WT.weapon.filter>: Pass it a filter 
-range<Integer>: distance in meters th eimpact must be within to trigger
-flag<String>: name of the flag to use
+target\<String>: Name of a unit or group, the function first looks for a unit with this name, if none found it will look for a group with that name.
+filter\<WT.weapon.filter>: Pass it a filter 
+range\<Integer>: distance in meters th eimpact must be within to trigger
+flag\<String>: name of the flag to use
 ```lua
 WT.weapon.near(target,filter,range,flag)
 ```
@@ -185,9 +185,9 @@ This feature is designed to detect weapons in a zone
 
 This will set a flag based on the amount of weapons currently within a given zone
 
-filter<WT.weapon.filter>: Pass it a filter 
-zone<String>: Name of zone to use
-flag<String>: name of the flag to use
+filter\<WT.weapon.filter>: Pass it a filter 
+zone\<String>: Name of zone to use
+flag\<String>: name of the flag to use
 ```lua
 WT.weapon.inZone(filter,zone,flag)
 ```
@@ -206,9 +206,9 @@ Note that the hit event is extremely unrealiable in multiplayer, especially for 
 
 it will increment the provided flag for each hit on the target unit
 
-target<String>: unit name
-filter<WT.weapon.filter>: Pass it a filter 
-flag<String>: name of the flag to use
+target\<String>: unit name
+filter\<WT.weapon.filter>: Pass it a filter 
+flag\<String>: name of the flag to use
 ```lua
 WT.weapon.hit(target,filter,flag)
 ```
