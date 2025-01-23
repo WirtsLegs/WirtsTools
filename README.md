@@ -5,9 +5,13 @@ WirtsTools is a amalgamation of various little functions and features that I hav
 *   [Disclaimer](#disclaimer)
 *   [How to use](#how-to-use)
 *   [Features](#features)
+    *   [weapon](#weapon-features)
+        *   [impactInZone](#impactinzone)
+        *   [impactNear](#impactnear)
+	    *   [near](#near)
+	    *   [inZone](#inzone)
+        *   [hit](#hit)
     *   [popFlare](#popflare)
-    *   [impactInZone](#impactinzone)
-    *   [impactNear](#impactnear)
     *   [playerNear](#playernear)
     *   [coverMe](#coverme)
     *   [invisAlt](#invisalt)
@@ -17,7 +21,7 @@ WirtsTools is a amalgamation of various little functions and features that I hav
     *   [tasking](#tasking)
     *   [stormtrooperAA](#stormtrooperaa)
     *   [shelling](#shelling)
-    *   [MLRS](#MLRS)
+    *   [MLRS](#mlrs)
     *   [percentAlive](#percentalive)
     *   [ejectionCleanup](#ejectioncleanup)
     *   [IRStrobe](#irstrobe)
@@ -29,6 +33,188 @@ Note that this script is provided as is with no guarantee of function nor promis
 Simply run the script with a triggered "Do Script File" then call the relevant setup functions in a "Do Script" for the features you wish to use
 
 ## Features
+### weapon features
+Starting in version 2.2.0 WirtsTools includes a specific grouping of features under `WT.weapon`, these are generally features that set flag values based on weapon behaviour (weapon impacts the ground in a zone, or gets near a unit etc)
+
+These features all use a common filter system to define the weapon types you are interested in. So to get started with any of these features you need to start with defining a filter.
+```lua
+local filter=WT.weapon.newFilter() -- create a new filter and save it to a local variable 'filter'
+```
+To start the filter is empty, this will match on every weapon fired, you may want that, but you also may not, to get mroe specific we add terms to the filter
+
+Terms are basically requirements any weapon must meet to pass the filter and can be made for a few different properties of the weapon, these are
+*   Name: The typename of the weapon, basically be very explicit and only match a specific weapon
+*   Coalition: The side the weapon belongs to (fired by a red, blue or neutral unit), defined as coalition.side.NEUTRAL, coalition.side.BLUE, or coalition.side.RED
+*   Category: The weapon's category (Shell, Missile, Rocket, Bomb, or Torpedo) 
+*   GuidanceType: How is the weapon guided (if it is), options include INS, IR, RADAR_ACTIVE and so on
+*   MissileCategory: Specific missile category (AAM, SAM, ANTI_SHIP, etc) note that not all missiles in DCS are properly categorized, for example the harpoon is categorized as Weapon.MissileCategory.OTHER instead of Weapon.MissileCategory.ANTI_SHIP
+*   WarheadType: AP, HE, or SHAPED_EXPLOSIVE
+
+You can create any number of terms for each property, and you can create negative terms as well. The evaluation logic is such that for any given property if there are any positive terms then atleast one of them MUST match, and if there are any negative terms they must all be satisfied
+
+So for example if Category terms include Weapon.Category.BOMB and Weapon.Category.MISSILE as positive terms then that will match on bombs or missiles, conversly if Warhead Type includes Weapon.WarheadType.AP and Weapon.WarheadType.HE as negative terms then weapons with AP or HE warheads will not be accepted by the filter
+
+Note for exact enum values to use see [here](https://wiki.hoggitworld.com/view/DCS_enum_weapon)
+
+Ok now how to actually add those terms to the filter, to start we created a filter with
+
+```lua
+local filter=WT.weapon.newFilter()
+```
+Now lets look at the addTerm() function
+
+self<filter>: this just means it takes a filter object, the way you will be calling it you wont have to worry about this argument
+field<string>: This is the field name for example Category as a string (possible values are "Name", "Coalition", "Category", "GuidanceType", "MissileCategory", and "WarheadType")
+term<int/enum>: This is the value you are looking to match or negate, you can put a integer value like 1, 2, 3, etc as that is what the enumerators technically are, or you can use something like Weapon.Category.MISSILE (I prefer this for readability)
+match<bool>: This tells the function if you want to match or negate for this term, if set to true then it will match, if false it will negate, if you dont inclue it this will default to true 
+```lua
+WT.weapon.filter.addTerm(self,field,term,match)
+```
+ok in practice then to add a term we call addTerm() on the filter we created like so
+```lua
+filter:addTerm("Categry",Weapon.Categroy.MISSILE,true) --this adds a term to the filter that will match weapons of category missile
+filter:addTerm("GuidanceType",Weapon.GuidanceType.IR,false) --ok the second term we added negates anything guided via IR
+```
+
+Note when defining these filters you can take a few different approaches, the example used above creates a local variable to hold the filter, so it exists within the scope of the "do script" action you are running it in, this si good for single use approach, defione the filter and immediately pass it to a function
+
+However if you plan to use the samne terms for multiple filters/functions you could take an approach like this
+
+```lua
+myFilters={}
+
+myFilters.missiles_not_ir = WT.weapon.newFilter()
+myFilters.missiles_not_ir:addTerm("Categry",Weapon.Categroy.MISSILE,true)
+myFilters.missiles_not_ir:addTerm("GuidanceType",Weapon.GuidanceType.IR,false)
+
+myFilters.bombs = WT.weapon.newFilter()
+myFilters.bombs:addTerm("Categry",Weapon.Categroy.BOMB,true)
+```
+Now you have a global table with those filters in it, you can access those filters at any time in other doScript triggers or elsewhere with `myFilters.missiles_not_ir` and `myFilters.bombs`
+
+That being said for simplicity in documentation examples going forward will assume taking the local approach with a filter simply named filter, but in those examples you would simply swap in `myFilers.filtername` to use a global filter
+
+
+So now we have a filter that will match any missile that isn't guided via IR, lets do something with it....
+
+All weapon features work similarly, they take a filter and some other arguments and then will set a flag based on those values. Note that all instances you create are only self-aware, they do not take into account OTHER instances, so if you use the same flag value in more than one instance behaviour will be odd at best
+
+All instances also have two functions for control that can be called on them, activate() and deactivate(), if you deactivate an instance the matching logic will stop being applied and all flags/background counters etc will be reset to 0
+
+To be able to activate/deactivate you need to save a reference to the instance SO for example with a impactInZone instance you do the following
+
+```lua
+impactInstance = WT.weapon.inZone(filter,"ZoneName","flagName")
+```
+more details on this function below but here ive created an instance and saved it to a global variable, you could also take an approach similar to the filter table above and define `myInstances = {}` and do this
+```lua
+myInstances.impactInstance = WT.weapon.impactInZone(filter,"ZoneName","flagName")
+```
+Then to deactivate or activate you simply do
+```lua
+impactInstance:deactivate()
+```
+or
+```lua
+impactInstance:activate()
+```
+note that all instances default activated at time of creation.
+
+A final point on performance, I did a lot to minimize impact, and indeed you should be run a lot of these features at once (or many instances) without issue, but one of the performance considerations means that any instances created will NOT detect/fire on weapons that were already in flight at time of the instance being created
+
+Right ok, lets talk the actual instance types....
+
+### impactInZone
+This feature is designed to detect when a weapon impacts the ground in a zone, (note that for performance reasons impact is defined as the weapon being destroyed within 15meters of the ground).
+
+This works with both poly and circular zones, and will increment a flag with each weapon impact in the zone that matches the filter
+
+filter<WT.weapon.filter>: Pass it a filter 
+zone<String>: name of the zone
+flag<String>: name of the flag to use
+```lua
+WT.weapon.impactInZone(filter,zone,flag)
+```
+example assuming we have a defined filter named filter
+```lua
+WT.weapon.impactInZone(filter,"impact_zone","impactCounter")
+```
+this will increment a flag called "impactCounter" with each impact in a zone called "impact_zone" that matches the defined filter
+
+### impactNear
+This feature is designed to detect when a weapon impacts the ground near a unit or group, (note that for performance reasons impact is defined as the weapon being destroyed within 15meters of the ground).
+
+This will increment a flag with each weapon impact within a deifned range of either a single unit, or any unit in a group, that matches the defined filter
+
+target<String>: Name of a unit or group, the function first looks for a unit with this name, if none found it will look for a group with that name.
+filter<WT.weapon.filter>: Pass it a filter 
+range<Integer>: distance in meters th eimpact must be within to trigger
+flag<String>: name of the flag to use
+```lua
+WT.weapon.impactNear(target,filter,range,flag)
+```
+example assuming we have a defined filter named filter
+```lua
+WT.weapon.impactNear("badGuy-1",filter,100,"impactCounter")
+```
+this will increment a flag called "impactCounter" with each impact within 100 meters of any unit in the group named "badGuy-1" which match the provided filter
+
+### near
+This feature is designed to detect when a weapon flies near a target
+
+This will set a flag based on the amount of weapons currently within a given range from target, it accepts groups or units but for performance reasons when using a group it only uses the group leader for checks
+
+target<String>: Name of a unit or group, the function first looks for a unit with this name, if none found it will look for a group with that name.
+filter<WT.weapon.filter>: Pass it a filter 
+range<Integer>: distance in meters th eimpact must be within to trigger
+flag<String>: name of the flag to use
+```lua
+WT.weapon.near(target,filter,range,flag)
+```
+Example assuming we have a defined filter named filter
+```lua
+WT.weapon.near("badGuy-1",filter,500,"weaponsNear")
+```
+this will keep a flag called "weaponsNear" set to a count of the amount of weapons within 500 meters of the leader of the group named "badGuy-1" which match the provided filter
+
+### inZone
+This feature is designed to detect weapons in a zone
+
+This will set a flag based on the amount of weapons currently within a given zone
+
+filter<WT.weapon.filter>: Pass it a filter 
+zone<String>: Name of zone to use
+flag<String>: name of the flag to use
+```lua
+WT.weapon.inZone(filter,zone,flag)
+```
+Example assuming we have a defined filter named filter
+```lua
+WT.weapon.inZone(filter,"ADIZ_1","weaponsInADIZ")
+```
+This will keep a flag called "weaponsInADIZ" set to a count of the amount of weapons within a zone called "ADIZ_1"
+
+### hit
+This feature is designed increment a flag for each time a weapon hits a given target
+
+This is really designed for very large targets like ships where impactNear with a very small distance isnt appropriate as a proxy for a hit
+
+Note that the hit event is extremely unrealiable in multiplayer, especially for player units, in my experience it does work ok for AI ships and such but YMMV, ensure you thoroughly test with this one before using it in multiplayer
+
+it will increment the provided flag for each hit on the target unit
+
+target<String>: unit name
+filter<WT.weapon.filter>: Pass it a filter 
+flag<String>: name of the flag to use
+```lua
+WT.weapon.hit(target,filter,flag)
+```
+Example assuming we have a defined filter named filter
+```lua
+WT.weapon.hit("BadShip-1",filter,"hits_on_ship")
+```
+This will increment a flag called "hits_on_ship" for each weapon that hits the unit named "BadShip-1" which passes the provided filter
+
 ### popFlare
 This is a simple script that will give your players a F10 option to fire a signal flare (choosing a colour), init function is
 ```lua
@@ -36,38 +222,6 @@ WT.popFlare.setup(side)
 ```
 side\<number>: Which side to apply to, use 1 for redfor, 2 for blufor  
 run multiple times if you want it to work for both sides
-
-### impactInZone
-This will detect munition impact in a defined zone and increment a flag for each impact, setup function is
-```lua
-WT.impactInZone.setup(munition,zone,flag,help,debug)
-```
-munition\<string>: munition name  
-zone\<string>: zone name  
-flag\<string>: flag to increment  
-help\<boolean>: for finding munition names, set to true then drop munitions to get a message with the back-end name  
-debug\<boolean>: to get text debugging messages  
-Examples:
-```lua
-WT.impactInZone.setup(nil,nil,nil,true,false) --for getting munition names
-WT.impactInZone.setup("AN_M64","target-1","flag2",false,true) --for testing with debugging outputs (AN_M64 hitting in target-1 zone)
-WT.impactInZone.setup("AN_M64","target-1","flag2",false,false) --for actual mission use (no text outputs)
-WT.impactInZone.setup(nil,"target-1","flag2",false,false) --to function on all weapons of category "bomb" or "rocket"
-```
-
-### impactNear
-Increments a flag when a munition lands near a unit or any unit in a group  
-munition\<string>: munition name  
-radius\<integer>: radius of circle around units to check for impacts (in meters)  
-group\<string>: name of group to check for impacts near  
-unit\<string>: name of unit to check for impacts near (if group has a value this will be ignored)  
-flag\<string>: flag to increment  
-Examples:  
-```lua
-WT.impactNear.setup("AN_M64",1000,"Group-1",nil,"flag1") --detect AN_M64 impacts within 1000meters of any member of Group-1, increment flag1 when you do
-WT.impactNear.setup("AN_M64",1000,nil,"Group-1-1","flag2") --detect AN_M64 impacts within 1000meters of the unit named of Group-1-1, increment flag1 when you do
-```
-
 ### playerNear
 Increment a flag for every second that a player is within a defined distance of a defined AI group
 ```lua
