@@ -5,26 +5,26 @@ WirtsTools is a amalgamation of various little functions and features that I hav
 *   [Disclaimer](#disclaimer)
 *   [How to use](#how-to-use)
 *   [Features](#features)
-    *   [weapon](#weapon-features)
+    *   [Weapon Features](#weapon-features)
         *   [Weapon Impact In Zone](#weapon-impact-in-zone)
         *   [Weapon Impact Near](#weapon-impact-near)
 	    *   [Weapon Near](#weapon-near)
 	    *   [Weapon in None](#weapon-in-zone)
         *   [Weapon Hit](#weapon-hit)
-    *   [popFlare](#pop-flare)
-    *   [playerNear](#player-near)
-    *   [coverMe](#cover-me)
-    *   [invisAlt](#invis-alt)
-    *   [suppression](#suppression)
-    *   [missileDeath](#missile-death)
-    *   [killSwitch](#killswitch)
-    *   [tasking](#tasking)
-    *   [stormtrooperAA](#stormtrooper-aa)
-    *   [shelling](#shelling)
+    *   [Pop Flare](#pop-flare)
+    *   [Player Near](#player-near)
+    *   [Cover Me](#cover-me)
+    *   [Invis Alt](#invis-alt)
+    *   [Suppression](#suppression)
+    *   [Missile Death](#missile-death)
+    *   [Kill Switch](#kill-switch)
+    *   [Tasking](#tasking)
+    *   [Stormtrooper AA](#stormtrooper-aa)
+    *   [Shelling](#shelling)
     *   [MLRS](#mlrs)
-    *   [percentAlive](#percent-alive)
-    *   [ejectionCleanup](#ejection-cleanup)
-    *   [IRStrobe](#ir-strobe)
+    *   [Percent Alive](#percent-alive)
+    *   [Ejection Cleanup](#ejection-cleanup)
+    *   [IR Strobe](#ir-strobe)
 
 ## Disclaimer
 Note that this script is provided as is with no guarantee of function nor promise of support, use at your own risk
@@ -279,7 +279,7 @@ simple function that makes sure that any unit hit by a missile dies (good for ti
 WT.missileDeath.setup()
 ```
 
-### killSwitch  
+### Kill Switch  
 For multiplayer missions its nice to have F10 radio options as backups/killswitches so you can salavage the mission if something breaks or say for example SEAD fligth all crash, but its not great when those options are exposed to 30 curious pilots fiddling in the radio menu or people that use VAICOM and thus constantly randomly trigger every possible radio option
 
 This function lets you assign radio options based on player name, they will be added/removed to/from groups as needed so that ONLY a group containing a player whose name contains a given string have those options
