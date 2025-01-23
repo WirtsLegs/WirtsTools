@@ -57,6 +57,8 @@ So for example if Category terms include Weapon.Category.BOMB and Weapon.Categor
 
 Note for exact enum values to use see [here](https://wiki.hoggitworld.com/view/DCS_enum_weapon)
 
+Finally to debug or otherwise figure out the values for a specific weapon including name run `WT.weapon.Debug()` that will turn on debugging output that will, among other things, print weapon details out to the screen when you fire a weapon
+
 Ok now how to actually add those terms to the filter, to start we created a filter with
 
 ```lua
