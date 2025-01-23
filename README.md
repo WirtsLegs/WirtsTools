@@ -132,9 +132,9 @@ This feature is designed to detect when a weapon impacts the ground in a zone, (
 
 This works with both poly and circular zones, and will increment a flag with each weapon impact in the zone that matches the filter
 
-filter<WT.weapon.filter>: Pass it a filter 
-zone<String>: name of the zone
-flag<String>: name of the flag to use
+filter\<WT.weapon.filter>: Pass it a filter 
+zone\<String>: name of the zone
+flag\<String>: name of the flag to use
 ```lua
 WT.weapon.impactInZone(filter,zone,flag)
 ```
