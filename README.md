@@ -250,13 +250,14 @@ coalition\<number>: coalition of AI players you want to be able to provide cover
 distance\<number>: distance in meters they must be within to be covered  
 
 ### Invis Alt
-Toggles invisibility when units go below a given AGL, note that since invis is at a group level this
+Toggles invisibility when units go below(or above) a given AGL, note that since invis is at a group level this
 only works properly when each unit is in a group of 1
 ```lua
-WT.invisAlt.setup(alt,side)
+WT.invisAlt.setup(alt,side,higher)
 ```
 alt\<number>: altitude (AGL) below which a group should be invisible  
 side\<number>: coalition enum (1 for red or 2 for blue) will apply to all players on that side  
+higher\<bool>: if true will make the groups invisible if they are above the alt instead of below ir
 
 ### Suppression
 suppresses ground units when they are shot at, not that it has no wway of knowing the current ROEs so if they are already weapons hold they will go weapons free when shot, after suppression ends as a result,is extremely basic, all hits work so yes infantry can suppress a tank, will iterate on later
