@@ -35,7 +35,7 @@ Simply run the script with a triggered "Do Script File" then call the relevant s
 ## Features
 
 ### Weapon Features
-Starting in version 2.2.0 WirtsTools includes a specific grouping of features under `WT.weapon`, these are generally features that set flag values based on weapon behaviour (weapon impacts the ground in a zone, or gets near a unit etc)
+Starting in version 2.2.0 WirtsTools includes a specific grouping of features under `WT.weapon`, these for now are generally features that set flag values based on weapon behaviour (weapon impacts the ground in a zone, or gets near a unit etc). Note some other features may get moved in here to use the filter system eventually (like Missile Death)
 
 These features all use a common filter system to define the weapon types you are interested in. So to get started with any of these features you need to start with defining a filter.
 ```lua
