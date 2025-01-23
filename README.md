@@ -9,7 +9,7 @@ WirtsTools is a amalgamation of various little functions and features that I hav
         *   [Weapon Impact In Zone](#weapon-impact-in-zone)
         *   [Weapon Impact Near](#weapon-impact-near)
 	    *   [Weapon Near](#weapon-near)
-	    *   [Weapon in None](#weapon-in-zone)
+	    *   [Weapon in Zone](#weapon-in-zone)
         *   [Weapon Hit](#weapon-hit)
     *   [Pop Flare](#pop-flare)
     *   [Player Near](#player-near)
