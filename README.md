@@ -51,7 +51,7 @@ Terms are basically requirements any weapon must meet to pass the filter and can
 *   MissileCategory: Specific missile category (AAM, SAM, ANTI_SHIP, etc) note that not all missiles in DCS are properly categorized, for example the harpoon is categorized as Weapon.MissileCategory.OTHER instead of Weapon.MissileCategory.ANTI_SHIP 
 *   WarheadType: AP, HE, or SHAPED_EXPLOSIVE 
 
-You can create any number of terms for each property, and you can create negative terms as well. The evaluation logic is such that for any given property if there are any positive terms then atleast one of them MUST match, and if there are any negative terms they must all be satisfied  
+You can create any Number of terms for each property, and you can create negative terms as well. The evaluation logic is such that for any given property if there are any positive terms then atleast one of them MUST match, and if there are any negative terms they must all be satisfied  
 
 So for example if Category terms include Weapon.Category.BOMB and Weapon.Category.MISSILE as positive terms then that will match on bombs or missiles, conversly if Warhead Type includes Weapon.WarheadType.AP and Weapon.WarheadType.HE as negative terms then weapons with AP or HE warheads will not be accepted by the filter  
 
@@ -68,7 +68,7 @@ Now lets look at the addTerm() function:
 
 **self** `<filter>`: this just means it takes a filter object, the way you will be calling it you wont have to worry about this argument.  
 **field** `<string>`: This is the field name for example Category as a string (possible values are "Name", "Coalition", "Category", "GuidanceType", "MissileCategory", and "WarheadType").  
-**term** `<int/enum>`: This is the value you are looking to match or negate, you can put a integer value like 1, 2, 3, etc as that is what the enumerators technically are, or you can use something like Weapon.Category.MISSILE (I prefer this for readability).  
+**term** `<int/enum>`: This is the value you are looking to match or negate, you can put a Number value like 1, 2, 3, etc as that is what the enumerators technically are, or you can use something like Weapon.Category.MISSILE (I prefer this for readability).  
 **match** `<bool>`: This tells the function if you want to match or negate for this term, if set to true then it will match, if false it will negate, if you dont inclue it this will default to true.  
 ```lua
 WT.weapon.filter.addTerm(self,field,term,match)
@@ -151,7 +151,7 @@ This will increment a flag with each weapon impact within a deifned range of eit
 
 **target** `<String>`: Name of a unit or group, the function first looks for a unit with this name, if none found it will look for a group with that name.  
 **filter** `<WT.weapon.filter>`: Pass it a filter.  
-**range** `<Integer>`: distance in meters th eimpact must be within to trigger.  
+**range** `<Number>`: distance in meters th eimpact must be within to trigger.  
 **flag** `<String>`: name of the flag to use  
 ```lua
 WT.weapon.impactNear(target,filter,range,flag)
@@ -169,7 +169,7 @@ This will set a flag based on the amount of weapons currently within a given ran
   
 **target** `<String>`: Name of a unit or group, the function first looks for a unit with this name, if none found it will look for a group with that name.  
 **filter** `<WT.weapon.filter>`: Pass it a filter  
-**range** `<Integer>`: distance in meters the impact must be within to trigger  
+**range** `<Number>`: distance in meters the impact must be within to trigger  
 **flag** `<String>`: name of the flag to use  
 ```lua
 WT.weapon.near(target,filter,range,flag)
@@ -220,20 +220,23 @@ This will increment a flag called "hits_on_ship" for each weapon that hits the u
 
 ### Pop Flare
 This is a simple script that will give your players a F10 option to fire a signal flare (choosing a colour), init function is  
+
+**side** `<Number>`: Which side to apply to, use 1 for redfor, 2 for blufor  
 ```lua
 WT.popFlare.setup(side)
 ```
-**side** `<number>`: Which side to apply to, use 1 for redfor, 2 for blufor  
-run multiple times if you want it to work for both sides
+run multiple times if you want it to work for both sides  
+
 ### Player Near
 Increment a flag for every second that a player is within a defined distance of a defined AI group
+
+**target_group** `<string>`: name of group you need to be near (in quotes)  
+**player_groups** `<table/Number>`: a list in the form {"name1","name2",...}, set to 2 for all blue players or 1 for all red  
+**flag** `<string>`: flag name to increment when conditions met  
+**distance** `<Number>`: distance in meters to operate within  
 ```lua
 WT.playerNear.setup(target_group,player_groups, flag, distance)
 ```
-**target_group** `<string>`: name of group you need to be near (in quotes)  
-**player_groups** `<table/number>`: a list in the form {"name1","name2",...}, set to 2 for all blue players or 1 for all red  
-**flag** `<string>`: flag name to increment when conditions met  
-**distance** `<number>`: distance in meters to operate within  
 Examples
 ```lua
 WT.playerNear.setup("target-1",2,"flag1",1000) --this will increment flag1 whenever any players are near the group target-1
@@ -242,35 +245,38 @@ WT.playerNear.setup("target-1",{"player"},"flag2",500) --this will increment the
 
 ### Cover Me
 renders players invisible when there is a allied AI aircraft within a defined range of the player
+
+**group** `<string>`: group that is covered by AI (1 or 2 for all player redfor or player blufor respectively)  
+**coalition** `<Number>`: coalition of AI players you want to be able to provide cover  
+**distance** `<Number>`: distance in meters they must be within to be covered  
 ```lua
 WT.coverMe.setup(group,coalition,distance)
 ```
-**group** `<string>`: group that is covered by AI (1 or 2 for all player redfor or player blufor respectively)  
-**coalition** `<number>`: coalition of AI players you want to be able to provide cover  
-**distance** `<number>`: distance in meters they must be within to be covered  
 
 ### Invis Alt
 Toggles invisibility when units go below(or above) a given AGL, note that since invis is at a group level this
 only works properly when each unit is in a group of 1
+`
+**alt** `<Number>`: altitude (AGL) below which a group should be invisible  
+**side** `<Number>`: coalition enum (1 for red or 2 for blue) will apply to all players on that side  
+**higher** `<bool>`: if true will make the groups invisible if they are above the alt instead of below it
 ```lua
 WT.invisAlt.setup(alt,side,higher)
 ```
-**alt** `<number>`: altitude (AGL) below which a group should be invisible  
-**side** `<number>`: coalition enum (1 for red or 2 for blue) will apply to all players on that side  
-**higher** `<bool>`: if true will make the groups invisible if they are above the alt instead of below ir
 
 ### Suppression
 suppresses ground units when they are shot at, not that it has no wway of knowing the current ROEs so if they are already weapons hold they will go weapons free when shot, after suppression ends as a result,is extremely basic, all hits work so yes infantry can suppress a tank, will iterate on later
+
+**hit** `<Number>`: suuppression time on hit in seconds  
+**kill** `<Number>`: suppression time on kill in seconds  
+**all** `<boolean>`: should we apply to all ground units or only those whose group name starts with SUP_  
+**side** `<Number>`: 1 for red 2 for blue, nil for both  
+**ai** `<boolean>`: if false then suppression only happens when shot by a player unit  
 ```lua
 WT.suppression.setup(hit,kill,all,side,ai)
 ```
-**hit** `<number>`: suuppression time on hit in seconds  
-**kill** `<number>`: suppression time on kill in seconds  
-**all** `<boolean>`: should we apply to all ground units or only those whose group name starts with SUP_  
-**side** `<number>`: 1 for red 2 for blue, nil for both  
-**ai** `<boolean>`: if false then suppression only happens when shot by a player unit  
 
-Examples
+Examples:
 ```lua
 WT.suppression.setup(2,5,true,1,false) --2 seconds suppression on hit, 5 on unit death, apply to all ground units, in red coalition, and only apply it if shot by a player
 WT.suppression.setup(2,5,false,1,false) --2 seconds suppression on hit, 5 on unit death, apply to only ground units whose group name starts with SUP_, in red coalition, and only apply it if shot by a player
@@ -286,32 +292,34 @@ WT.missileDeath.setup()
 For multiplayer missions its nice to have F10 radio options as backups/killswitches so you can salavage the mission if something breaks or say for example SEAD fligth all crash, but its not great when those options are exposed to 30 curious pilots fiddling in the radio menu or people that use VAICOM and thus constantly randomly trigger every possible radio option
 
 This function lets you assign radio options based on player name, they will be added/removed to/from groups as needed so that ONLY a group containing a player whose name contains a given string have those options
-```lua
-WT.killswitch.setup(player,name,flag,singleUse)
-```
 
 **player** `<string>`: subname of the player (eg maple if the player's name will for sure contain maple)  
 **name** `<string>`: name of the radio option  
 **flag** `<string>`: flag to set when pressed  
 **singleUse** `<bool>`: true makes the option disappear once used
+```lua
+WT.killswitch.setup(player,name,flag,singleUse)
+```
   
 ### Tasking  
 Call when you want to drop a new mission into a group, designed to have taskings defined via late activation groups you never activate
-```lua
-WT.tasking.task(group,task,relative)
-```
+
 **group** `<string>`: name of the group you want to task  
 **task** `<string>`: name of the group whose tasking you want to clone (must start with 'TASK_')
 **relative** `<boolean>`:  whether you want the task waypoints to be shifted so the path is the same shape as defined but starting where the group is (true), or keep tasking waypoints in defined locations (false)   
+```lua
+WT.tasking.task(group,task,relative)
+```
   
 ### Stormtrooper AA  
 Makes designated AA units shoot in the vincinity of valid targets instead of at them, note that at this time there is a bug where units tasked to fire at point will ignore that order if there is a valid target nearby, meaning to use this properly for now your targets need to be invisible
+
+**side** `<Number>`: side of the expected targets (yes you can make blue shoot blue)  
+**shooters** `<Number>`: side of the AA you wish to control (all AA must be group name starts with AA_)  
+**advancedLOS** `<bool>`: whether to factor in objects (statics, scenery, and other units) for LOS calculations  
 ```lua
 WT.stormtrooperAA.setup(side,shooters,advancedLOS)
 ```
-**side** `<number>`: side of the expected targets (yes you can make blue shoot blue)  
-**shooters** `<number>`: side of the AA you wish to control (all AA must be group name starts with AA_)  
-**advancedLOS** `<bool>`: whether to factor in objects (statics, scenery, and other units) for LOS calculations
 Example
 ```lua
 WT.stormtrooperAA.setup(2,1,true) --will give red shooting blue using advanced LOS
@@ -319,13 +327,14 @@ WT.stormtrooperAA.setup(2,1,true) --will give red shooting blue using advanced L
   
 ### Shelling  
 Like the vanilla shelling zone, but instead generates a sustained barrage within the target zone (only for circular zones)  
+  
+**zone** `<string>`: name of the zone you want to shell  
+**rate** `<Number>`: a Number that when multiplied by a random value between 1 and 10 determines the delay between impacts, smaller Number means faster barrage, try 0.03 to start  
+**safe** `<Number>`: how many safe zones (zones that shouldn't be shelled) overlap your target zone, safe zones need to be named `<zone>`-safe-`<Number>` starting at one, so for a target zone of 'target-1' the first safe zone would be 'target-1-safe-1'
+**flag** `<string>`: a flag to watch for and if set to true to stop the shelling  
 ```lua
 WT.shelling.setup(zone,rate,safe,flag)
-```  
-**zone** `<string>`: name of the zone you want to shell  
-**rate** `<number>`: a number that when multiplied by a random value between 1 and 10 determines the delay between impacts, smaller number means faster barrage, try 0.03 to start  
-**safe** `<number>`: how many safe zones (zones that shouldn't be shelled) overlap your target zone, safe zones need to be named `<zone>`-safe-`<number>` starting at one, so for a target zone of 'target-1' the first safe zone would be 'target-1-safe-1'
-**flag** `<string>`: a flag to watch for and if set to true to stop the shelling  
+```
 Example  
 ```lua
 WT.shelling.setup("target",0.03,1,"endit") --will shell the zone named target, with a 0.03 rate modifier, there is 1 safe zone and shelling will stop when the flag "endit" is set
@@ -333,10 +342,11 @@ WT.shelling.setup("target",0.03,1,"endit") --will shell the zone named target, w
 
 ### MLRS  
 Deletes rockets/missiles from MLRS units while they are in flight so you can have the effect of them firing without tanking FPS from them impacting  
+  
+**groups** `<table>`: table of the group names you want this to apply to, use nil for all MLRS units  
 ```lua
 WT.MLRS.setup(groups)
 ```  
-**groups** `<table>`: table of the group names you want this to apply to, use nil for all MLRS units
 Example  
 ```lua
 WT.MLRS.setup({"SMERCH-1","SMERCH-2","SMERCH-3"}) --will function only when MLRS units in groups names SMERCH-1, SMERCH-2, or SMERCH-3 fire
@@ -345,11 +355,12 @@ WT.MLRS.setup(nil) --will function on all MLRS launches
 
 ### Percent Alive  
 Updates a flag with the overal percent (0 - 100) of the units in the designated groups that are alive.  
+
+**groups** `<table>`: table of the group names you want this to apply to, use nil for all MLRS units  
+**flag** `<string>`: the name of the fag you want the alive status to be updated through  
 ```lua
 WT.percentAlive.setup(groups,flag)
 ```  
-**groups** `<table>`: table of the group names you want this to apply to, use nil for all MLRS units  
-**flag** `<string>`: the name of the fag you want the alive status to be updated through  
 Example  
 ```lua
 WT.percentAlive.setup({"SMERCH-1","SMERCH-2","SMERCH-3"},"smerch_groups") --will update a flag called 'smerch_groups' based on the percentage of the those groups that are alive
@@ -366,7 +377,7 @@ WT.eject.init()
 Creates a blinking IR strobe on units  
 **groups** `<string>` `<group>`: can be either a reference to a group table, or the name of the group as a string  
 **onoff** `<boolean>`: if true then sets the strobe on, if false sets it off, if nil then toggles it (on if currently off, off if currently on)  
-**interval** `<number>`: time interval that the ir light is on/off eg a interval of 1 would be 1 seond on then 1 second off, personally I find 0.15 or 0.2 works well (note overly long intervals will look strange)  
+**interval** `<Number>`: time interval that the ir light is on/off eg a interval of 1 would be 1 seond on then 1 second off, personally I find 0.15 or 0.2 works well (note overly long intervals will look strange)  
 **location** `<Vec3>`: the strobe is attached at this Vec3 point in model local coordinates, nil for a default strobe above the unit
 Example:  
 ```lua
