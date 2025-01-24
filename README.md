@@ -378,7 +378,7 @@ Creates a blinking IR strobe on units
 **groups** `<string>` `<group>`: can be either a reference to a group table, or the name of the group as a string  
 **onoff** `<boolean>`: if true then sets the strobe on, if false sets it off, if nil then toggles it (on if currently off, off if currently on)  
 **interval** `<Number>`: time interval that the ir light is on/off eg a interval of 1 would be 1 seond on then 1 second off, personally I find 0.15 or 0.2 works well (note overly long intervals will look strange)  
-**location** `<Vec3>`: the strobe is attached at this Vec3 point in model local coordinates, nil for a default strobe above the unit
+**location** `<Vec3>`: the strobe is attached at this Vec3 point in model local coordinates, nil for a default strobe above the unit  
 Example:  
 ```lua
 WT.strobe.toggleStrobe("infantry-1",true,0.2,nil) --will turn on a default strobe for a group named 'infantry-1' with a 0.2 second interval
