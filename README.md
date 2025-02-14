@@ -8,8 +8,9 @@ WirtsTools is a amalgamation of various little functions and features that I hav
     *   [Weapon Features](#weapon-features)
         *   [Weapon Impact In Zone](#weapon-impact-in-zone)
         *   [Weapon Impact Near](#weapon-impact-near)
-	    *   [Weapon Near](#weapon-near)
-	    *   [Weapon in Zone](#weapon-in-zone)
+        *   [Weapon Near](#weapon-near)
+        *   [Weapon in Zone](#weapon-in-zone)
+        *   [Weapon Shot](#weapon-shot)
         *   [Weapon Hit](#weapon-hit)
     *   [Pop Flare](#pop-flare)
     *   [Player Near](#player-near)
@@ -196,7 +197,13 @@ Example assuming we have a defined filter named filter
 WT.weapon.inZone(filter,"ADIZ_1","weaponsInADIZ")
 ``` 
 This will keep a flag called "weaponsInADIZ" set to a count of the amount of weapons within a zone called "ADIZ_1"  
-
+### Weapon Shot
+This is a simple shot counter that works with the weapon filters, the flag will be incremented each time a weapon that passes the filter is fired
+**filter** `<WT.weapon.filter>`: Pass it a filter  
+**flag** `<String>`: name of the flag to use 
+```lua
+WT.weapon.shot(filter,flag)
+```
 ### Weapon Hit
 This feature is designed increment a flag for each time a weapon hits a given target  
   
