@@ -1,28 +1,8 @@
 ----------------
 --WirtsTools
---version 2.2.0
+--version 2.2.1
 --Directions: load this script as Do Script File, then call setup functions in a do script action for the features
 -- you wish to use (scroll to line 879 to see documentation on setup functions)
---Features:
---weaponImpactInZone
---weaponImpactNear
---weaponNear
---weaponInZone
---weaponHit
---weaponInZone
---PlayerNear
---coverMe
---invisAlt
---suppression
---missileDeath
---killswitch
---tasking
---stormtrooperAA
---shelling
---MLRS
---percentAlive
---eject
---toggleStrobe
 ----------------
 do
   WT = {}
@@ -86,7 +66,7 @@ do
         zones[zones_in[z]["name"]] = zones_in[z]
       end
     end
-    WT.zones.zones = zones
+    WT.zones = zones
   end
 
 
@@ -162,7 +142,7 @@ do
   }
 
   local function IsInCircle(p, r, c)
-    return vecMag({x = p.x - c.x, y = 0, z = p.z - c.z}) < r
+    return vecMag({ x = p.x - c.x, y = 0, z = p.z - c.z }) < r
   end
 
   local function explodePoint(point, time)
@@ -181,7 +161,7 @@ do
 
   --will cleanup a sphere described by a Vec3 point (x,y,z) and a radius
   function WT.cleanupPoint(point, radius)
-    point.y = land.getHeight({x = point.x, y = point.z})
+    point.y = land.getHeight({ x = point.x, y = point.z })
     local volS = {
       id = world.VolumeType.SPHERE,
       params = {
@@ -195,7 +175,7 @@ do
   --will cleanup a sphere described by a circular zone
   function WT.cleanupZone(zone)
     local sphere = trigger.misc.getZone(zone)
-    sphere.point.y = land.getHeight({x = sphere.point.x, y = sphere.point.z})
+    sphere.point.y = land.getHeight({ x = sphere.point.x, y = sphere.point.z })
     local volS = {
       id = world.VolumeType.SPHERE,
       params = {
@@ -207,624 +187,713 @@ do
   end
 
   local function isInList(list, value)
-      for _, v in ipairs(list) do
-          if v == value then
-              return true
-          end
+    for _, v in ipairs(list) do
+      if v == value then
+        return true
       end
-      return false
+    end
+    return false
   end
 
   function WT.inZone(point, zone)
-      
-      if zone.type == 2 then
-        if IsInPolygon(point, Polygon(zone.verticies)) then --verticies
-          return true
-        end
-      else
-          if vecMag({x = zone.x - point.x, y = zone.y - point.y}) < zone.radius then
-              return true
-          end
+    if zone.type == 2 then
+      if IsInPolygon(point, Polygon(zone.verticies)) then   --verticies
+        return true
       end
-      return false
+    else
+      if vecMag({ x = zone.x - point.x, y = zone.y - point.y }) < zone.radius then
+        return true
+      end
+    end
+    return false
   end
 
-  WT.weapon={}
-  WT.weapon.debug=false
-  WT.weapon.instanceTypes={
-      IN_ZONE=1,
-      NEAR=2,
-      IMPACT_IN_ZONE=3,
-      IMPACT_NEAR=4,
-      HIT=5
+  WT.weapon = {}
+  WT.weapon.debug = false
+  WT.weapon.instanceTypes = {
+    IN_ZONE = 1,
+    NEAR = 2,
+    IMPACT_IN_ZONE = 3,
+    IMPACT_NEAR = 4,
+    HIT = 5,
+    SHOT=6
   }
-  WT.weapon.weapons={}
-  WT.weapon.instances={}
+
+  WT.weapon.weapons = {}
+  WT.weapon.instances = {}
 
   function WT.weapon.newFilter()
-      local weaponFilter={
-          Category={};
-          GuidanceType={};
-          MissileCategory={};
-          WarheadType={};
-          Coalition={};
-          Name={};
+    local weaponFilter = {
+      Category = {},
+      GuidanceType = {},
+      MissileCategory = {},
+      WarheadType = {},
+      Coalition = {},
+      Name = {},
 
-          Category_neg={};
-          GuidanceType_neg={};
-          MissileCategory_neg={};
-          WarheadType_neg={};
-          Coalition_neg={};
-          Name_neg={};
+      Category_neg = {},
+      GuidanceType_neg = {},
+      MissileCategory_neg = {},
+      WarheadType_neg = {},
+      Coalition_neg = {},
+      Name_neg = {},
 
-          terms=0;
+      terms = 0,
 
-          addTerm=function(self,field,term,match)
-            if WT.weapon.debug and WT.weapon.debug == true then
-              trigger.action.outText("attempting to add term: "..field .."="..tostring(term) , 5 , false)
-            end
-              -- Validate the field name
-              if not self[field] and not self[field .. "_neg"] then
-                  error(string.format("Unknown filter field '%s'. Must be one of: Category, GuidanceType, MissileCategory, WarheadType, or Name.", tostring(field)))
-              end
+      addTerm = function(self, field, term, match)
+        if WT.weapon.debug and WT.weapon.debug == true then
+          trigger.action.outText("attempting to add term: " .. field .. "=" .. tostring(term), 5, false)
+        end
+        -- Validate the field name
+        if not self[field] and not self[field .. "_neg"] then
+          error(string.format(
+          "Unknown filter field '%s'. Must be one of: Category, GuidanceType, MissileCategory, WarheadType, or Name.",
+            tostring(field)))
+        end
 
-              if match==false then
-                  table.insert(self[field .. "_neg"], term)
-                  self.terms = self.terms+1
-                  if WT.weapon.debug and WT.weapon.debug == true then
-                    trigger.action.outText(field .. "_neg added: "..tostring(term) , 5 , false)
-                  end
-              else
-                  table.insert(self[field], term)
-                  self.terms = self.terms+1
-                  if WT.weapon.debug and WT.weapon.debug == true then
-                    trigger.action.outText(field .. " added: "..tostring(term) , 5 , false)
-                  end
-              end
-          end;
-
-          checkFilter = function(self, weapon,debug)
-              
-            if self.terms==0 then
-              if debug and debug == true then
-                if weapon then
-                  local name         = weapon:getTypeName()
-                  local side         = weapon:getCoalition()
-                  local cat          = desc.category                -- e.g. Weapon.Category.MISSILE
-                  local guidance     = desc.guidance               -- e.g. Weapon.GuidanceType.IR
-                  local missileCat   = desc.missileCategory        -- e.g. Weapon.MissileCategory.AAM
-                  local warheadType  = desc.warheadType 
-                  trigger.action.outText("Filter Check Weapon" , 5 , false)
-                  trigger.action.outText("name: "..name , 5 , false)
-                  trigger.action.outText("coalition: "..side , 5 , false)
-                  trigger.action.outText("category: "..tostring(cat) , 5 , false)
-                  trigger.action.outText("guidance: "..tostring(guidance), 5 , false)
-                  trigger.action.outText("missile cat: "..tostring(missileCat) , 5 , false)
-                  trigger.action.outText("warhead: "..tostring(warheadType) , 5 , false)
-
-                else
-                  trigger.action.outText("weapon nil")
-                end
-              end
-              return true;
-            end
-            
-            if weapon == nil then
-              if debug and debug == true then
-                trigger.action.outText("weapon nil")
-              end
-              return false;
-            end
-
-            local desc = weapon:getDesc()
-            if not desc then
-                -- If getDesc() returns nil for some reason, fail or pass as you see fit
-                return false
-            end
-
-            -- Pull out the values we'll check
-            local name         = weapon:getTypeName()
-            local side         = weapon:getCoalition()
-            local cat          = desc.category                -- e.g. Weapon.Category.MISSILE
-            local guidance     = desc.guidance               -- e.g. Weapon.GuidanceType.IR
-            local missileCat   = desc.missileCategory        -- e.g. Weapon.MissileCategory.AAM
-            local warheadType  = desc.warheadType            -- e.g. Weapon.WarheadType.HE
-            -- (Depending on DCS version, you might need to check desc.warhead or something else.)
-            if debug and debug == true then
-                trigger.action.outText("Filter Check Weapon" , 5 , false)
-                trigger.action.outText("name: "..name , 5 , false)
-                trigger.action.outText("coalition: "..side , 5 , false)
-                trigger.action.outText("category: "..tostring(cat) , 5 , false)
-                trigger.action.outText("guidance: "..tostring(guidance), 5 , false)
-                trigger.action.outText("missile cat: "..tostring(missileCat) , 5 , false)
-                trigger.action.outText("warhead: "..tostring(warheadType) , 5 , false)
-            end
-            -- 1) Check Name (positive)
-            if self.Name and #self.Name > 0 then
-                -- If we have a positive Category filter, the weapon's Name must be in that list
-                if not isInList(self.Name, name) then
-                  if debug and debug == true then
-                    trigger.action.outText("Name filter" , 5 , false)
-                  end
-                  return false
-                end
-            end
-            -- 1b) Check Name (negative)
-            if self.Name_neg and #self.Name_neg > 0 then
-                -- If the weapon's Name is in our negative list, fail
-                if isInList(self.Name_neg, name) then
-                  if debug and debug == true then
-                    trigger.action.outText("Name neg filter" , 5 , false)
-                  end
-                  return false
-                end
-            end
-            if self.Coalition and #self.Coalition > 0 then
-              -- If we have a positive Category filter, the weapon's Name must be in that list
-              if not isInList(self.Coalition, side) then
-                if debug and debug == true then
-                  trigger.action.outText("Coalition filter" , 5 , false)
-                end
-                return false
-              end
-            end
-          -- 1b) Check Name (negative)
-            if self.Coalition_neg and #self.Coalition_neg > 0 then
-              -- If the weapon's Name is in our negative list, fail
-              if isInList(self.Coalition_neg, side) then
-                if debug and debug == true then
-                  trigger.action.outText("Coalition neg filter" , 5 , false)
-                end
-                return false
-              end
-            end
-
-            -- 1) Check Category (positive)
-            if self.Category and #self.Category > 0 then
-                -- If we have a positive Category filter, the weapon's category must be in that list
-                if not isInList(self.Category, cat) then
-                  if debug and debug == true then
-                    trigger.action.outText("Category filter" , 5 , false)
-                  end
-                  return false
-                end
-            end
-            -- 1b) Check Category (negative)
-            if self.Category_neg and #self.Category_neg > 0 then
-                -- If the weapon's category is in our negative list, fail
-                if isInList(self.Category_neg, cat) then
-                  if debug and debug == true then
-                    trigger.action.outText("Category neg filter" , 5 , false)
-                  end
-                  return false
-                end
-            end
-
-            -- 2) Check GuidanceType (positive)
-            if self.GuidanceType and #self.GuidanceType > 0 then
-                if not isInList(self.GuidanceType, guidance) then
-                  if debug and debug == true then
-                    trigger.action.outText("Guidance filter" , 5 , false)
-                  end
-                  return false
-                end
-            end
-            -- 2b) Negative
-            if self.GuidanceType_neg and #self.GuidanceType_neg > 0 then
-                if isInList(self.GuidanceType_neg, guidance) then
-                  if debug and debug == true then
-                    trigger.action.outText("Guidance neg filter" , 5 , false)
-                  end
-                  return false
-                end
-            end
-
-            -- 3) Check MissileCategory (positive)
-            if self.MissileCategory and #self.MissileCategory > 0 then
-                if not isInList(self.MissileCategory, missileCat) then
-                  if debug and debug == true then
-                    trigger.action.outText("Missile Category filter" , 5 , false)
-                  end
-                  return false
-                end
-            end
-            -- 3b) Negative
-            if self.MissileCategory_neg and #self.MissileCategory_neg > 0 then
-                if isInList(self.MissileCategory_neg, missileCat) then
-                  if debug and debug == true then
-                    trigger.action.outText("Missile Category neg filter" , 5 , false)
-                  end
-                  return false
-                end
-            end
-
-            -- 4) Check WarheadType (positive)
-            if self.WarheadType and #self.WarheadType > 0 then
-                if not isInList(self.WarheadType, warheadType) then
-                  if debug and debug == true then
-                    trigger.action.outText("Warhead filter" , 5 , false)
-                  end
-                  return false
-                end
-            end
-            -- 4b) Negative
-            if self.WarheadType_neg and #self.WarheadType_neg > 0 then
-                if isInList(self.WarheadType_neg, warheadType) then
-                  if debug and debug == true then
-                    trigger.action.outText("Warhead neg filter" , 5 , false)
-                  end
-                  return false
-                end
-            end
-
-            -- If we didn't fail any checks, it passes
-            return true
-          end;
-      }
-      return weaponFilter
-  end
-
-  WT.weapon.filters={
-    ALL=WT.weapon.newFilter(),
-    MISSILES=WT.weapon.newFilter(),
-    BOMBS=WT.weapon.newFilter(),
-    ROCKETS=WT.weapon.newFilter(),
-    SHELLS=WT.weapon.newFilter()
-  }
-  WT.weapon.filters.MISSILES:addTerm("Category",Weapon.Category.MISSILE)
-  WT.weapon.filters.BOMBS:addTerm("Category",Weapon.Category.BOMB)
-  WT.weapon.filters.ROCKETS:addTerm("Category",Weapon.Category.ROCKET)
-  WT.weapon.filters.SHELLS:addTerm("Category",Weapon.Category.SHELL)
-  
-  function WT.weapon.updateWeapon(weapon,time)
-      if p(weapon.weapon.isExist,weapon.weapon) then
-          weapon.last_point = weapon.weapon:getPoint()
-          for i=1,#weapon.instances do
-              if weapon.instances[i].active == true then
-                  if weapon.instances[i].type == WT.weapon.instanceTypes.NEAR then
-                      weapon.instances[i]:checkWep(weapon)
-                  elseif weapon.instances[i].type == WT.weapon.instanceTypes.IN_ZONE then
-                      weapon.instances[i]:checkWep(weapon)
-                  end
-              end
+        if match == false then
+          table.insert(self[field .. "_neg"], term)
+          self.terms = self.terms + 1
+          if WT.weapon.debug and WT.weapon.debug == true then
+            trigger.action.outText(field .. "_neg added: " .. tostring(term), 5, false)
           end
-          return time+0.05
-      else
-          for i=1,#weapon.instances do
-              if weapon.instances[i].active == true then
-                  if weapon.instances[i].type == WT.weapon.instanceTypes.IMPACT_IN_ZONE then
-                      weapon.instances[i]:checkWep(weapon)
-                  elseif weapon.instances[i].type == WT.weapon.instanceTypes.IMPACT_NEAR then
-                      weapon.instances[i]:checkWep(weapon)
-                  end
-              end
-          end
-          return nil
-      end
-  end
-
-  function WT.weapon.handleShots(event)
-      if event.id==world.event.S_EVENT_SHOT then --track fired weapons
-        local valid_instances={}
-        for x=1,#WT.weapon.instances do 
-          if WT.weapon.instances[x].active == true and WT.weapon.instances[x].type<=4 then
-            if WT.weapon.debug==true then
-              if WT.weapon.instances[x].filter:checkFilter(event.weapon,true)==true then
-                valid_instances[#valid_instances+1] = WT.weapon.instances[x]
-              end
-            else
-              if WT.weapon.instances[x].filter:checkFilter(event.weapon,false)==true then
-                valid_instances[#valid_instances+1] = WT.weapon.instances[x]
-              end
+        else
+          table.insert(self[field], term)
+          self.terms = self.terms + 1
+          if WT.weapon.debug and WT.weapon.debug == true then
+            trigger.action.outText(field .. " added: " .. tostring(term), 5, false)
           end
         end
+      end,
+
+      checkFilter = function(self, weapon, debug)
+        if self.terms == 0 then
+          if debug and debug == true then
+            if weapon then
+              local name        = weapon:getTypeName()
+              local side        = weapon:getCoalition()
+              local cat         = desc.category             -- e.g. Weapon.Category.MISSILE
+              local guidance    = desc.guidance             -- e.g. Weapon.GuidanceType.IR
+              local missileCat  = desc.missileCategory      -- e.g. Weapon.MissileCategory.AAM
+              local warheadType = desc.warheadType
+              trigger.action.outText("Filter Check Weapon", 5, false)
+              trigger.action.outText("name: " .. name, 5, false)
+              trigger.action.outText("coalition: " .. side, 5, false)
+              trigger.action.outText("category: " .. tostring(cat), 5, false)
+              trigger.action.outText("guidance: " .. tostring(guidance), 5, false)
+              trigger.action.outText("missile cat: " .. tostring(missileCat), 5, false)
+              trigger.action.outText("warhead: " .. tostring(warheadType), 5, false)
+            else
+              trigger.action.outText("weapon nil")
+            end
+          end
+          return true;
+        end
+
+        if weapon == nil then
+          if debug and debug == true then
+            trigger.action.outText("weapon nil")
+          end
+          return false;
+        end
+
+        local desc = weapon:getDesc()
+        if not desc then
+          -- If getDesc() returns nil for some reason, fail or pass as you see fit
+          return false
+        end
+
+        -- Pull out the values we'll check
+        local name        = weapon:getTypeName()
+        local side        = weapon:getCoalition()
+        local cat         = desc.category             -- e.g. Weapon.Category.MISSILE
+        local guidance    = desc.guidance             -- e.g. Weapon.GuidanceType.IR
+        local missileCat  = desc.missileCategory      -- e.g. Weapon.MissileCategory.AAM
+        local warheadType = desc.warheadType          -- e.g. Weapon.WarheadType.HE
+        -- (Depending on DCS version, you might need to check desc.warhead or something else.)
+        if debug and debug == true then
+          trigger.action.outText("Filter Check Weapon", 5, false)
+          trigger.action.outText("name: " .. name, 5, false)
+          trigger.action.outText("coalition: " .. side, 5, false)
+          trigger.action.outText("category: " .. tostring(cat), 5, false)
+          trigger.action.outText("guidance: " .. tostring(guidance), 5, false)
+          trigger.action.outText("missile cat: " .. tostring(missileCat), 5, false)
+          trigger.action.outText("warhead: " .. tostring(warheadType), 5, false)
+        end
+        -- 1) Check Name (positive)
+        if self.Name and #self.Name > 0 then
+          -- If we have a positive Category filter, the weapon's Name must be in that list
+          if not isInList(self.Name, name) then
+            if debug and debug == true then
+              trigger.action.outText("Name filter", 5, false)
+            end
+            return false
+          end
+        end
+        -- 1b) Check Name (negative)
+        if self.Name_neg and #self.Name_neg > 0 then
+          -- If the weapon's Name is in our negative list, fail
+          if isInList(self.Name_neg, name) then
+            if debug and debug == true then
+              trigger.action.outText("Name neg filter", 5, false)
+            end
+            return false
+          end
+        end
+        if self.Coalition and #self.Coalition > 0 then
+          -- If we have a positive Category filter, the weapon's Name must be in that list
+          if not isInList(self.Coalition, side) then
+            if debug and debug == true then
+              trigger.action.outText("Coalition filter", 5, false)
+            end
+            return false
+          end
+        end
+        -- 1b) Check Name (negative)
+        if self.Coalition_neg and #self.Coalition_neg > 0 then
+          -- If the weapon's Name is in our negative list, fail
+          if isInList(self.Coalition_neg, side) then
+            if debug and debug == true then
+              trigger.action.outText("Coalition neg filter", 5, false)
+            end
+            return false
+          end
+        end
+
+        -- 1) Check Category (positive)
+        if self.Category and #self.Category > 0 then
+          -- If we have a positive Category filter, the weapon's category must be in that list
+          if not isInList(self.Category, cat) then
+            if debug and debug == true then
+              trigger.action.outText("Category filter", 5, false)
+            end
+            return false
+          end
+        end
+        -- 1b) Check Category (negative)
+        if self.Category_neg and #self.Category_neg > 0 then
+          -- If the weapon's category is in our negative list, fail
+          if isInList(self.Category_neg, cat) then
+            if debug and debug == true then
+              trigger.action.outText("Category neg filter", 5, false)
+            end
+            return false
+          end
+        end
+
+        -- 2) Check GuidanceType (positive)
+        if self.GuidanceType and #self.GuidanceType > 0 then
+          if not isInList(self.GuidanceType, guidance) then
+            if debug and debug == true then
+              trigger.action.outText("Guidance filter", 5, false)
+            end
+            return false
+          end
+        end
+        -- 2b) Negative
+        if self.GuidanceType_neg and #self.GuidanceType_neg > 0 then
+          if isInList(self.GuidanceType_neg, guidance) then
+            if debug and debug == true then
+              trigger.action.outText("Guidance neg filter", 5, false)
+            end
+            return false
+          end
+        end
+
+        -- 3) Check MissileCategory (positive)
+        if self.MissileCategory and #self.MissileCategory > 0 then
+          if not isInList(self.MissileCategory, missileCat) then
+            if debug and debug == true then
+              trigger.action.outText("Missile Category filter", 5, false)
+            end
+            return false
+          end
+        end
+        -- 3b) Negative
+        if self.MissileCategory_neg and #self.MissileCategory_neg > 0 then
+          if isInList(self.MissileCategory_neg, missileCat) then
+            if debug and debug == true then
+              trigger.action.outText("Missile Category neg filter", 5, false)
+            end
+            return false
+          end
+        end
+
+        -- 4) Check WarheadType (positive)
+        if self.WarheadType and #self.WarheadType > 0 then
+          if not isInList(self.WarheadType, warheadType) then
+            if debug and debug == true then
+              trigger.action.outText("Warhead filter", 5, false)
+            end
+            return false
+          end
+        end
+        -- 4b) Negative
+        if self.WarheadType_neg and #self.WarheadType_neg > 0 then
+          if isInList(self.WarheadType_neg, warheadType) then
+            if debug and debug == true then
+              trigger.action.outText("Warhead neg filter", 5, false)
+            end
+            return false
+          end
+        end
+
+        -- If we didn't fail any checks, it passes
+        return true
+      end,
+    }
+    return weaponFilter
+  end
+
+  WT.weapon.filters = {
+    ALL = WT.weapon.newFilter(),
+    MISSILES = WT.weapon.newFilter(),
+    BOMBS = WT.weapon.newFilter(),
+    ROCKETS = WT.weapon.newFilter(),
+    SHELLS = WT.weapon.newFilter()
+  }
+
+  WT.weapon.filters.MISSILES:addTerm("Category", Weapon.Category.MISSILE)
+  WT.weapon.filters.BOMBS:addTerm("Category", Weapon.Category.BOMB)
+  WT.weapon.filters.ROCKETS:addTerm("Category", Weapon.Category.ROCKET)
+  WT.weapon.filters.SHELLS:addTerm("Category", Weapon.Category.SHELL)
+
+  function WT.weapon.updateWeapon(weapon, time)
+    if p(weapon.weapon.isExist, weapon.weapon) then
+      weapon.last_point = weapon.weapon:getPoint()
+      for i = 1, #weapon.instances do
+        weapon.instances[i]:weaponUpdate(weapon)
       end
-      if #valid_instances>0 then
+      return time + 0.05
+    else
+      for i = 1, #weapon.instances do
+        if weapon.instances[i].active == true then
+          weapon.instances[i]:weaponGone(weapon)
+        end
+      end
+      return nil
+    end
+  end
+
+  function WT.weapon.handleEvents(event)
+    if event.id == world.event.S_EVENT_SHOT then --track fired weapons
+      local valid_instances = {}
+      for x = 1, #WT.weapon.instances do
+        if WT.weapon.instances[x]:checkEvent(event) == true then
+          valid_instances[#valid_instances + 1] = WT.weapon.instances[x]
+        end
+      end
+      if #valid_instances > 0 then
         local weapon_category = event.weapon:getDesc().category
         local weapon_name = event.weapon:getTypeName()
         local p1 = event.weapon:getPoint()
-        local id =tostring(p1.x+p1.y+p1.z)
+        local id = tostring(p1.x + p1.y + p1.z)
         id = id .. event.weapon:getTypeName()
         id = id .. tostring(timer.getTime())
         id = id .. tostring(math.random())
-        local weapon = {weapon = event.weapon,name = weapon_name,category=weapon_category,target=event.weapon:getTarget(),id=id, instances=valid_instances,last_point=p1}
-        timer.scheduleFunction(WT.weapon.updateWeapon ,weapon, timer.getTime() + 0.05 )
+        local weapon = { weapon = event.weapon, name = weapon_name, category = weapon_category, target = event.weapon
+        :getTarget(), id = id, instances = valid_instances, last_point = p1 }
+        timer.scheduleFunction(WT.weapon.updateWeapon, weapon, timer.getTime() + 0.05)
+      end
+    elseif event.id == world.event.S_EVENT_HIT then --check hit events
+      if WT.weapon.debug == true then
+        trigger.action.outText("Hit detected", 5, false)
+      end
+      for x = 1, #WT.weapon.instances do
+        WT.weapon.instances[x]:checkEvent(event)
       end
     end
   end
 
-  function WT.weapon.handleHits(event)
-    if event.id == world.event.S_EVENT_HIT then
-      if WT.weapon.debug == true then
-        trigger.action.outText("Hit detected" , 5 , false)
+  -----WEAPON INSTANCE TYPES HERE
+
+  function WT.weapon.newNearInstance(filter, target, range, flag)
+    local tgt_type = ""
+    local tgt = p(Unit.getByName, target)
+    if tgt == nil then
+      tgt = p(Group.getByName, target)
+      if tgt == nil then
+        return nil
       end
-      for x=1,#WT.weapon.instances do 
-        if WT.weapon.instances[x].active == true and WT.weapon.instances[x].type>4 then
-          if WT.weapon.debug == true then
-            trigger.action.outText("hit type valid" , 5 , false)
+      tgt_type = "group"
+    else
+      tgt_type = "unit"
+    end
+
+    local inst = {
+      filter = filter,
+      target = target,
+      tgtType = tgt_type,
+      range = range,
+      flag = flag,
+      active = true,
+      present = {},
+      type = WT.weapon.instanceTypes.NEAR,
+
+      deactivate = function(self)
+        self.active = false
+        trigger.action.setUserFlag(self.flag, 0)
+        self.present = {}
+      end,
+
+      activate = function(self)
+        self.active = true
+      end,
+
+      checkEvent = function(self, event)
+        if event.id == world.event.S_EVENT_SHOT then
+          if self.active == true then
+            if self.filter:checkFilter(event.weapon, WT.weapon.debug) == true then
+              return true
+            end
           end
-          WT.weapon.instances[x]:checkEvent(event)
+        end
+        return false
+      end,
+
+      weaponGone = function(self, wep)
+        for r = 1, #self.present do
+          if self.present[r] == wep.id then
+            table.remove(self.present, r)
+            trigger.action.setUserFlag(self.flag, #self.present)
+            break
+          end
+        end
+      end,
+
+      weaponUpdate = function(self, wep)
+        local ref = {}
+        if self.tgtType == "group" then
+          local g = p(Group.getByName, self.target)
+          if g then
+            local u = p(Group.getUnit, g, 1)
+            if u then
+              ref = u:getPoint()
+            else
+              return
+            end
+          else
+            return
+          end
+        else
+          local u = p(Unit.getByName, self.target)
+          if u then
+            ref = u:getPoint()
+          else
+            return
+          end
+        end
+        local pos = wep.last_point
+        local dist = vecMag { x = pos.x - ref.x, y = pos.y - ref.y, z = pos.z - ref.z }
+        if dist <= self.range then
+          if not isInList(self.present, wep.id) then
+            self.present[#self.present + 1] = wep.id
+            trigger.action.setUserFlag(self.flag, #self.present)
+          end
+        else
+          for r = 1, #self.present do
+            if self.present[r] == wep.id then
+              table.remove(self.present, r)
+              trigger.action.setUserFlag(self.flag, #self.present)
+              break
+            end
+          end
         end
       end
+    }
+    return inst
+  end
+
+  function WT.weapon.newImpactNearInstance(filter, target, range, flag)
+    local tgt_type = ""
+    local tgt = p(Unit.getByName, target)
+    if tgt == nil then
+      tgt = p(Group.getByName, target)
+      if tgt == nil then
+        return nil
+      end
+      tgt_type = "group"
+    else
+      tgt_type = "unit"
     end
-  end
 
------WEAPON INSTANCE TYPES HERE
+    local inst = {
+      filter = filter,
+      target = target,
+      tgtType = tgt_type,
+      range = range,
+      flag = flag,
+      active = true,
+      impacts = 0,
+      type = WT.weapon.instanceTypes.IMPACT_NEAR,
 
-  function WT.weapon.newNearInstance(filter,target,range,flag)
-      local tgt_type = ""
-      local tgt=p(Unit.getByName,target)
-      if tgt == nil then
-          tgt=p(Group.getByName,target)
-          if tgt== nil then
-              return nil
+
+      deactivate = function(self)
+        self.active = false
+        trigger.action.setUserFlag(self.flag, 0)
+        self.impacts = 0
+      end,
+
+      activate = function(self)
+        self.active = true
+      end,
+      weaponUpdate = function(self, wep)
+        return false
+      end,
+
+      checkEvent = function(self, event)
+        if event.id == world.event.S_EVENT_SHOT then
+          if self.active == true then
+            if self.filter:checkFilter(event.weapon, WT.weapon.debug) == true then
+              return true
+            end
           end
-          tgt_type="group"
-      else
-          tgt_type="unit"
+        end
+        return false
+      end,
+
+      weaponGone = function(self, wep)
+        local ref = {}
+        local pos = wep.last_point
+        local ground = land.getHeight({ x = pos.x, y = pos.z })
+        if pos.y - ground > 10 then
+          return
+        end
+        if self.tgtType == "group" then
+          local g = p(Group.getByName, self.target)
+          if g then
+            local u = p(Group.getUnits, g)
+            if u then
+              for j = 1, #u do
+                ref[#ref + 1] = u[j]:getPoint()
+              end
+            else
+              return
+            end
+          else
+            return
+          end
+        else
+          local u = p(Unit.getByName, self.target)
+          if u then
+            ref[#ref + 1] = u:getPoint()
+          else
+            return
+          end
+        end
+
+        for p = 1, #ref do
+          local dist = vecMag { x = pos.x - ref[p].x, y = pos.y - ref[p].y, z = pos.z - ref[p].z }
+          if dist <= self.range then
+            self.impacts = self.impacts + 1
+            trigger.action.setUserFlag(self.flag, self.impacts)
+            return
+          end
+        end
       end
-
-      local inst= {
-          filter=filter,
-          target=target,
-          tgtType = tgt_type,
-          range=range,
-          flag=flag,
-          active=true,
-          present={},
-          type=WT.weapon.instanceTypes.NEAR,
-
-          deactivate=function(self)
-              self.active=false
-              trigger.action.setUserFlag(self.flag , 0)
-              self.present={}
-          end,
-
-          activate=function(self)
-              self.active=true
-          end,
-
-          checkWep=function(self,wep)
-              local ref = {}
-              if self.tgtType=="group" then
-                  local g = p(Group.getByName,self.target)
-                  if g then
-                      local u = p(Group.getUnit,g,1)
-                      if u then
-                          ref=u:getPoint()
-                      else
-                          return
-                      end
-                  else
-                      return
-                  end
-              else
-                  local u = p(Unit.getByName,self.target)
-                  if u then
-                      ref=u:getPoint()
-                  else
-                      return
-                  end
-              end
-              local pos = wep.last_point
-              local dist = vecMag{x=pos.x-ref.x,y=pos.y-ref.y,z=pos.z-ref.z}
-              if dist <= self.range then
-                  if not isInList(self.present,wep.id) then
-                      self.present[#self.present+1] = wep.id
-                      trigger.action.setUserFlag(self.flag , #self.present)
-                  end
-              else
-                  for r=1, #self.present do
-                      if self.present[r] == wep.id then
-                          table.remove(self.present,r)
-                          trigger.action.setUserFlag(self.flag , #self.present)
-                          break
-                      end
-                  end
-              end
-          end
-      }
-      return inst
+    }
+    return inst
   end
 
-  function WT.weapon.newImpactNearInstance(filter,target,range,flag)
-      local tgt_type = ""
-      local tgt=p(Unit.getByName,target)
-      if tgt == nil then
-          tgt=p(Group.getByName,target)
-          if tgt== nil then
-              return nil
+  function WT.weapon.newZoneInstance(filter, zone, flag)
+    local inst = {
+      filter = filter,
+      zone = zone,
+      flag = flag,
+      active = true,
+      present = {},
+      type = WT.weapon.instanceTypes.IN_ZONE,
+
+
+      deactivate = function(self)
+        self.active = false
+        trigger.action.setUserFlag(self.flag, 0)
+        self.present = {}
+      end,
+
+      activate = function(self)
+        self.active = true
+      end,
+
+      weaponGone = function(self, wep)
+        for r = 1, #self.present do
+          if self.present[r] == wep.id then
+            table.remove(self.present, r)
+            trigger.action.setUserFlag(self.flag, #self.present)
+            break
           end
-          tgt_type="group"
-      else
-          tgt_type="unit"
+        end
+      end,
+
+      checkEvent = function(self, event)
+        if event.id == world.event.S_EVENT_SHOT then
+          if self.active == true then
+            if self.filter:checkFilter(event.weapon, WT.weapon.debug) == true then
+              return true
+            end
+          end
+        end
+        return false
+      end,
+
+      weaponUpdate = function(self, wep)
+        local pos = wep.last_point
+        if WT.inZone({ x = pos.x, y = pos.z }, WT.zones[self.zone]) == true then
+          if not isInList(self.present, wep.id) then
+            self.present[#self.present + 1] = wep.id
+            trigger.action.setUserFlag(self.flag, #self.present)
+          end
+        else
+          for r = 1, #self.present do
+            if self.present[r] == wep.id then
+              table.remove(self.present, r)
+              trigger.action.setUserFlag(self.flag, #self.present)
+              break
+            end
+          end
+        end
       end
-
-      local inst= {
-          filter=filter,
-          target=target,
-          tgtType = tgt_type,
-          range=range,
-          flag=flag,
-          active=true,
-          impacts=0,
-          type=WT.weapon.instanceTypes.IMPACT_NEAR,
-
-          
-          deactivate=function(self)
-              self.active=false
-              trigger.action.setUserFlag(self.flag , 0)
-              self.impacts=0
-          end,
-
-          activate=function(self)
-              self.active=true
-          end,
-
-          checkWep=function(self,wep)
-              local ref = {}
-              local pos = wep.last_point
-              local ground = land.getHeight({x=pos.x,y=pos.z})
-              if pos.y-ground > 10 then
-                  return 
-              end
-              if self.tgtType=="group" then
-                  local g = p(Group.getByName,self.target)
-                  if g then
-                      local u = p(Group.getUnits,g)
-                      if u then
-                          for j=1,#u do
-                              ref[#ref+1]=u[j]:getPoint()
-                          end
-                      else
-                          return
-                      end
-                  else
-                      return
-                  end
-              else
-                  local u = p(Unit.getByName,self.target)
-                  if u then
-                      ref[#ref+1]=u:getPoint()
-                  else
-                      return
-                  end
-              end
-              
-              for p=1,#ref do
-                  local dist = vecMag{x=pos.x-ref[p].x,y=pos.y-ref[p].y,z=pos.z-ref[p].z}
-                  if dist <= self.range then
-                      self.impacts=self.impacts+1
-                      trigger.action.setUserFlag(self.flag , self.impacts)
-                      return
-                  end
-              end
-          end
-      }
-      return inst
+    }
+    return inst
   end
 
+  function WT.weapon.newImpactZoneInstance(filter, zone, flag)
+    local inst = {
+      filter = filter,
+      zone = zone,
+      flag = flag,
+      active = true,
+      impacts = 0,
+      type = WT.weapon.instanceTypes.IN_ZONE,
 
-  function WT.weapon.newZoneInstance(filter,zone,flag)
 
-      local inst= {
-          filter=filter,
-          zone=zone,
-          flag=flag,
-          active=true,
-          present={},
-          type=WT.weapon.instanceTypes.IN_ZONE,
+      deactivate = function(self)
+        self.active = false
+        trigger.action.setUserFlag(self.flag, 0)
+        self.impacts = 0
+      end,
 
-          
-          deactivate=function(self)
-              self.active=false
-              trigger.action.setUserFlag(self.flag , 0)
-              self.present={}
-          end,
+      activate = function(self)
+        self.active = true
+      end,
 
-          activate=function(self)
-              self.active=true
-          end,
+      weaponUpdate = function(self, wep)
+        return false
+      end,
 
-          checkWep=function(self,wep)
-              local pos = wep.last_point
-              if WT.inZone({x=pos.x,y=pos.z},WT.zones[self.zone])==true then
-                  if not isInList(self.present,wep.id) then
-                      self.present[#self.present+1] = wep.id
-                      trigger.action.setUserFlag(self.flag , #self.present)
-                  end
-              else
-                  for r=1, #self.present do
-                      if self.present[r] == wep.id then
-                          table.remove(self.present,r)
-                          trigger.action.setUserFlag(self.flag , #self.present)
-                          break
-                      end
-                  end
-              end
+      checkEvent = function(self, event)
+        if event.id == world.event.S_EVENT_SHOT then
+          if self.active == true then
+            if self.filter:checkFilter(event.weapon, WT.weapon.debug) == true then
+              return true
+            end
           end
-      }
-      return inst
+        end
+        return false
+      end,
+
+      weaponGone = function(self, wep)
+        local pos = wep.last_point
+        local ground = land.getHeight({ x = pos.x, y = pos.z })
+        if pos.y - ground > 10 then
+          return
+        end
+        if WT.inZone({ x = pos.x, y = pos.z }, WT.zones[self.zone]) == true then
+          self.impacts = self.impacts + 1
+          trigger.action.setUserFlag(self.flag, self.impacts)
+        end
+      end
+    }
+    return inst
   end
 
-  function WT.weapon.newImpactZoneInstance(filter,zone,flag)
+  function WT.weapon.newShotInstance(filter, flag)
+    local inst = {
+      filter = filter,
+      flag = flag,
+      active = true,
+      shots = 0,
+      type = WT.weapon.instanceTypes.SHOT,
 
-      local inst= {
-          filter=filter,
-          zone=zone,
-          flag=flag,
-          active=true,
-          impacts=0,
-          type=WT.weapon.instanceTypes.IN_ZONE,
 
-          
-          deactivate=function(self)
-              self.active=false
-              trigger.action.setUserFlag(self.flag , 0)
-              self.impacts=0
-          end,
+      deactivate = function(self)
+        self.active = false
+        trigger.action.setUserFlag(self.flag, 0)
+        self.shots = 0
+      end,
 
-          activate=function(self)
-              self.active=true
-          end,
+      activate = function(self)
+        self.active = true
 
-          checkWep=function(self,wep)
-              local pos = wep.last_point
-              local ground = land.getHeight({x=pos.x,y=pos.z})
-              if pos.y-ground > 10 then
-                  return 
-              end
-              if WT.inZone({x=pos.x,y=pos.z},WT.zones[self.zone])==true then
-                  self.impacts=self.impacts+1
-                  trigger.action.setUserFlag(self.flag , self.impacts)
-              end
+        return
+      end,
+
+      checkEvent = function(self, event)
+        if event.id == world.event.S_EVENT_SHOT then
+          if self.active == true then
+            if self.filter:checkFilter(event.weapon, WT.weapon.debug) == true then
+              self.shots=self.shots+1
+              trigger.action.setUserFlag(self.flag, self.shots)
+            end
           end
-      }
-      return inst
+        end
+        return false
+      end,
+
+      weaponUpdate = function(self, wep)
+        return false
+      end,
+
+      weaponGone = function(self, wep)
+        return false
+      end
+    }
+    return inst
   end
-  function WT.weapon.newHitInstance(filter,target,flag)
 
-    local inst= {
-        filter=filter,
-        target=target,
-        flag=flag,
-        active=true,
-        hits=0,
-        type=WT.weapon.instanceTypes.HIT,
+  function WT.weapon.newHitInstance(filter, target, flag)
+    local inst = {
+      filter = filter,
+      target = target,
+      flag = flag,
+      active = true,
+      hits = 0,
+      type = WT.weapon.instanceTypes.HIT,
 
-        
-        deactivate=function(self)
-          self.active=false
-          trigger.action.setUserFlag(self.flag , 0)
-          self.impacts=0
-        end,
 
-        activate=function(self)
-          self.active=true
-        end,
+      deactivate = function(self)
+        self.active = false
+        trigger.action.setUserFlag(self.flag, 0)
+        self.impacts = 0
+      end,
 
-        checkEvent=function(self,event)
+      activate = function(self)
+        self.active = true
+      end,
+
+      checkEvent = function(self, event)
+        if event.id == world.event.HIT then
           local weapon = event.weapon
           if event.target then
-            local tgtName=p(Unit.getName,event.target)
+            local tgtName = p(Unit.getName, event.target)
             if tgtName ~= self.target then
               return
             end
           else
             return
           end
-          local filter = self.filter:checkFilter(weapon,WT.weapon.debug)
-          if filter==true then
-            if WT.weapon.debug==true then
-              trigger.action.outText("valid hit" , 5 , false)
+          local filter = self.filter:checkFilter(weapon, WT.weapon.debug)
+          if filter == true then
+            if WT.weapon.debug == true then
+              trigger.action.outText("valid hit", 5, false)
             end
-            self.hits=self.hits+1
-            trigger.action.setUserFlag(self.flag , self.hits)
-          elseif WT.weapon.debug==true then
-            trigger.action.outText("invalid hit" , 5 , false)
+            self.hits = self.hits + 1
+            trigger.action.setUserFlag(self.flag, self.hits)
+          elseif WT.weapon.debug == true then
+            trigger.action.outText("invalid hit", 5, false)
           end
-
         end
+      end
     }
     return inst
   end
@@ -858,7 +927,7 @@ do
         if tp == nil then
           return nil
         end
-        if vecMag({x = weapon.last_point.x - tp.x, y = weapon.last_point.y - tp.y, z = weapon.last_point.z - tp.z}) < 50 then
+        if vecMag({ x = weapon.last_point.x - tp.x, y = weapon.last_point.y - tp.y, z = weapon.last_point.z - tp.z }) < 50 then
           trigger.action.explosion(tp, 3000)
         end
       end
@@ -882,8 +951,6 @@ do
       end
     end
   end
-
-  
 
   -----------------------------------------------------------------------
   --PlayerNear
@@ -911,7 +978,7 @@ do
         for j = 1, #g2_units do
           local p2 = p(Unit.getPoint, g2_units[j])
           if p2 then
-            local dist = vecMag({x = p1.x - p2.x, y = p1.y - p2.y, z = p1.z - p2.z})
+            local dist = vecMag({ x = p1.x - p2.x, y = p1.y - p2.y, z = p1.z - p2.z })
             if shortest > -1 then
               if dist < shortest then
                 shortest = dist
@@ -1025,7 +1092,7 @@ do
         for j = 1, #g2_units do
           local p2 = p(Unit.getPoint, g2_units[j])
           if p2 then
-            local dist = vecMag({x = p1.x - p2.x, y = p1.y - p2.y, z = p1.z - p2.z})
+            local dist = vecMag({ x = p1.x - p2.x, y = p1.y - p2.y, z = p1.z - p2.z })
             if shortest > -1 then
               if dist < shortest then
                 shortest = dist
@@ -1090,7 +1157,7 @@ do
     if p == nil then
       return nil
     end
-    local s = land.getHeight({x = p.x, y = p.z})
+    local s = land.getHeight({ x = p.x, y = p.z })
     local alt = p.y - s
     if (invisAlt.higher == false and alt > invisAlt.triggerAlt) or (invisAlt.higher == true and alt < invisAlt.triggerAlt) then
       player:getGroup():getController():setCommand(SetVisible)
@@ -1225,7 +1292,7 @@ do
   -----------------------------------------------------
 
   WT.popFlare = {}
-  WT.popFlare.side = {0, 0}
+  WT.popFlare.side = { 0, 0 }
   WT.popFlare.done = {}
   function WT.popFlare.popFlare(details, amount)
     local grp = Group.getByName(details.grp)
@@ -1246,14 +1313,14 @@ do
         WT.popFlare.done[name] = 1
         local grp = group:getID()
         missionCommands.addSubMenuForGroup(grp, "signal flares")
-        missionCommands.addCommandForGroup(grp, "green flare", {[1] = "signal flares"}, WT.popFlare.popFlare,
-          {grp = name, colour = 0})
-        missionCommands.addCommandForGroup(grp, "red flare", {[1] = "signal flares"}, WT.popFlare.popFlare,
-          {grp = name, colour = 1})
-        missionCommands.addCommandForGroup(grp, "white flare", {[1] = "signal flares"}, WT.popFlare.popFlare,
-          {grp = name, colour = 2})
-        missionCommands.addCommandForGroup(grp, "yellow flare", {[1] = "signal flares"}, WT.popFlare.popFlare,
-          {grp = name, colour = 3})
+        missionCommands.addCommandForGroup(grp, "green flare", { [1] = "signal flares" }, WT.popFlare.popFlare,
+          { grp = name, colour = 0 })
+        missionCommands.addCommandForGroup(grp, "red flare", { [1] = "signal flares" }, WT.popFlare.popFlare,
+          { grp = name, colour = 1 })
+        missionCommands.addCommandForGroup(grp, "white flare", { [1] = "signal flares" }, WT.popFlare.popFlare,
+          { grp = name, colour = 2 })
+        missionCommands.addCommandForGroup(grp, "yellow flare", { [1] = "signal flares" }, WT.popFlare.popFlare,
+          { grp = name, colour = 3 })
       end
     end
   end
@@ -1269,7 +1336,7 @@ do
   function WT.killswitch.killswitch(details)
     trigger.action.setUserFlag(details.flag, 1)
     if details.single == true then
-      missionCommands.removeItemForGroup(details.id, {[1] = "killswitch"})
+      missionCommands.removeItemForGroup(details.id, { [1] = "killswitch" })
       WT.killswitch.used[details.name] = true
     end
   end
@@ -1290,7 +1357,7 @@ do
 
     if details.cName ~= group then
       if details.cID ~= nil then
-        missionCommands.removeItemForGroup(details.cID, {[1] = "killswitch"})
+        missionCommands.removeItemForGroup(details.cID, { [1] = "killswitch" })
         WT.killswitch.active[details.cID] = 0
       end
       if group then
@@ -1300,8 +1367,8 @@ do
           missionCommands.addSubMenuForGroup(gr:getID(), "killswitch")
           WT.killswitch.active[id] = 1
         end
-        missionCommands.addCommandForGroup(gr:getID(), details.name, {[1] = "killswitch"}, WT.killswitch.killswitch,
-          {flag = details.flag, single = details.single, name = details.name, id = details.cID})
+        missionCommands.addCommandForGroup(gr:getID(), details.name, { [1] = "killswitch" }, WT.killswitch.killswitch,
+          { flag = details.flag, single = details.single, name = details.name, id = details.cID })
         details.cID = gr:getID()
         details.cName = group
       end
@@ -1415,7 +1482,7 @@ do
       z = z + point.z
     end
 
-    return {x = x / size, y = y / size, z = z / size}
+    return { x = x / size, y = y / size, z = z / size }
   end
 
   local function newStormtrooper()
@@ -1436,7 +1503,7 @@ do
         end
 
         local src = self.point
-        src.y = land.getHeight({x = src.x, y = src.z})
+        src.y = land.getHeight({ x = src.x, y = src.z })
         src.y = src.y + 5
         local vis = land.isVisible(src, target)
         if vis ~= true then
@@ -1449,7 +1516,7 @@ do
           vol.from = src
           vol.to = target
 
-          world.searchObjects({1, 2, 3, 4, 5, 6}, vol, ifFound)
+          world.searchObjects({ 1, 2, 3, 4, 5, 6 }, vol, ifFound)
 
           for f = 1, #found do
             if found[f] ~= target then
@@ -1481,15 +1548,15 @@ do
             --if detected  then
             point = players[i]:getPoint()
             local vel = players[i]:getVelocity()
-            local temp_dist = vecMag({x = point.x - ref.x, y = point.y - ref.y, z = point.z - ref.z})
+            local temp_dist = vecMag({ x = point.x - ref.x, y = point.y - ref.y, z = point.z - ref.z })
             point.x = point.x + (7 + 2 * (temp_dist / 3000)) * vel.x
             point.y = point.y + (7 + 2 * (temp_dist / 3000)) * vel.y
             point.z = point.z + (7 + 2 * (temp_dist / 3000)) * vel.z
-            local height = land.getHeight({x = point.x, y = point.z})
+            local height = land.getHeight({ x = point.x, y = point.z })
             if point.y < height then
               point.y = height + 5
             end
-            dist = vecMag({x = point.x - ref.x, y = point.y - ref.y, z = point.z - ref.z})
+            dist = vecMag({ x = point.x - ref.x, y = point.y - ref.y, z = point.z - ref.z })
             if dist < nearest_d and self:checkLOS(point, self.basic) == true then
               nearest_d = dist
               nearest = point
@@ -1498,7 +1565,7 @@ do
           end
           if nearest ~= nil and nearest_d < 8000 then
             task = FireAtPoint
-            task.params.point = {x = nearest.x, y = nearest.z}
+            task.params.point = { x = nearest.x, y = nearest.z }
             task.params.altitude = nearest.y
             controller:pushTask(task)
           end
@@ -1549,7 +1616,7 @@ do
     local targX = x + r * math.cos(theta)
     local targY = y + r * math.sin(theta)
 
-    return {x = targX, z = targY, y = land.getHeight({x = targX, y = targY})}
+    return { x = targX, z = targY, y = land.getHeight({ x = targX, y = targY }) }
   end
 
   function WT.shelling.shell(details, time)
@@ -1575,7 +1642,7 @@ do
   ---------------------------------------------------------------------
 
   WT.MLRS = {}
-  WT.MLRS.types = {Smerch = 10, ["Uragan_BM-27"] = 10, ["Grad-URAL"] = 6, MLRS = 7, Smerch_HE = 10}
+  WT.MLRS.types = { Smerch = 10, ["Uragan_BM-27"] = 10, ["Grad-URAL"] = 6, MLRS = 7, Smerch_HE = 10 }
 
   function WT.MLRS.remove(weapon, time)
     p(weapon.destroy, weapon)
@@ -1701,7 +1768,7 @@ do
         z = pos.p.z + pos.x.z * details.l.x + pos.y.z * details.l.y + pos.z.z * details.l.z
       }
       local spot = Spot.createInfraRed(details.u, details.l, to)
-      timer.scheduleFunction(WT.strobe.strobeOff, {d = details, s = spot},
+      timer.scheduleFunction(WT.strobe.strobeOff, { d = details, s = spot },
         timer.getTime() + details.i)
     end
     return nil
@@ -1728,14 +1795,14 @@ do
           local name = groups[g]:getName()
           WT.popFlare.done[name] = 1
           missionCommands.addSubMenuForGroup(grp, "Signal Flares", nil)
-          missionCommands.addCommandForGroup(grp, "green flare", {[1] = "Signal Flares"}, WT.popFlare.popFlare,
-            {grp = name, colour = 0})
-          missionCommands.addCommandForGroup(grp, "red flare", {[1] = "Signal Flares"}, WT.popFlare.popFlare,
-            {grp = name, colour = 1})
-          missionCommands.addCommandForGroup(grp, "white flare", {[1] = "Signal Flares"}, WT.popFlare.popFlare,
-            {grp = name, colour = 2})
-          missionCommands.addCommandForGroup(grp, "yellow flare", {[1] = "Signal Flares"}, WT.popFlare.popFlare,
-            {grp = name, colour = 3})
+          missionCommands.addCommandForGroup(grp, "green flare", { [1] = "Signal Flares" }, WT.popFlare.popFlare,
+            { grp = name, colour = 0 })
+          missionCommands.addCommandForGroup(grp, "red flare", { [1] = "Signal Flares" }, WT.popFlare.popFlare,
+            { grp = name, colour = 1 })
+          missionCommands.addCommandForGroup(grp, "white flare", { [1] = "Signal Flares" }, WT.popFlare.popFlare,
+            { grp = name, colour = 2 })
+          missionCommands.addCommandForGroup(grp, "yellow flare", { [1] = "Signal Flares" }, WT.popFlare.popFlare,
+            { grp = name, colour = 3 })
         end
       end
     end
@@ -1796,7 +1863,7 @@ do
     if #WT.coverMe.groups < 1 then
       timer.scheduleFunction(coverMe.check, 2, timer.getTime() + 1)
     end
-    WT.coverMe.groups[#WT.coverMe.groups + 1] = {group = group, co = coalition, distance = distance, covered = false}
+    WT.coverMe.groups[#WT.coverMe.groups + 1] = { group = group, co = coalition, distance = distance, covered = false }
   end
 
   ----------------------------------------------
@@ -1848,7 +1915,7 @@ do
   --flag: flag to set when pressed
   ---------------------------------------------------------------------------
   function WT.killswitch.setup(player, name, flag, singleUse)
-    local details = {pname = player, name = name, flag = flag, single = singleUse, cName = nil, cID = nil}
+    local details = { pname = player, name = name, flag = flag, single = singleUse, cName = nil, cID = nil }
     timer.scheduleFunction(WT.killswitch.updateMenu, details, timer.getTime() + 1)
   end
 
@@ -1925,7 +1992,7 @@ do
   --WT.shelling.setup("target",0.03,1,"endit") will shell the zone named target, with a 0.03 rate modifier, there is 1 safe zone and shelling will stop when the flag "endit" is set
   ----------------------------------------------
   function WT.shelling.setup(zone, rate, safe, flag)
-    timer.scheduleFunction(WT.shelling.shell, {z = zone, s = safe, r = rate, f = flag}, timer.getTime() + 1)
+    timer.scheduleFunction(WT.shelling.shell, { z = zone, s = safe, r = rate, f = flag }, timer.getTime() + 1)
   end
 
   ----------------------------------------------
@@ -2003,37 +2070,35 @@ do
       for u = 1, #units do
         if location == nil then
           local desc = units[u]:getDesc()
-          location = {x = 0, y = desc.box.max.y - desc.box.min.y, z = 0}
+          location = { x = 0, y = desc.box.max.y - desc.box.min.y, z = 0 }
         end
-        timer.scheduleFunction(WT.strobe.strobeOn, {u = units[u], g = grp, l = location, i = math.max(0.15, interval)},
+        timer.scheduleFunction(WT.strobe.strobeOn, { u = units[u], g = grp, l = location, i = math.max(0.15, interval) },
           timer.getTime() + 1 + (math.random(0, 100) / 100))
       end
     end
   end
 
-      ------
+  ------
   --- func desc
   ---@param target string
   ---@param filter weaponFilter
   ---@param range integer
   ---@param flag string
-  function WT.weapon.near(target,filter,range,flag)
+  function WT.weapon.near(target, filter, range, flag)
     if #WT.weapon.instances < 1 then
-        newEventHandler(WT.weapon.handleShots)
-        newEventHandler(WT.weapon.handleHits)
+      newEventHandler(WT.weapon.handleEvents)
     end
-    local instance=WT.weapon.newNearInstance(filter,target,range,flag)
-    WT.weapon.instances[#WT.weapon.instances+1]=instance
+    local instance = WT.weapon.newNearInstance(filter, target, range, flag)
+    WT.weapon.instances[#WT.weapon.instances + 1] = instance
     return instance
   end
 
-  function WT.weapon.hit(target,filter,flag)
+  function WT.weapon.hit(target, filter, flag)
     if #WT.weapon.instances < 1 then
-      newEventHandler(WT.weapon.handleShots)
-      newEventHandler(WT.weapon.handleHits)
+      newEventHandler(WT.weapon.handleEvents)
     end
-    local instance=WT.weapon.newHitInstance(filter,target,flag)
-    WT.weapon.instances[#WT.weapon.instances+1]=instance
+    local instance = WT.weapon.newHitInstance(filter, target, flag)
+    WT.weapon.instances[#WT.weapon.instances + 1] = instance
     return instance
   end
 
@@ -2042,13 +2107,12 @@ do
   ---@param filter weaponFilter
   ---@param range integer
   ---@param flag string
-  function WT.weapon.impactNear(target,filter,range,flag)
+  function WT.weapon.impactNear(target, filter, range, flag)
     if #WT.weapon.instances < 1 then
-        newEventHandler(WT.weapon.handleShots)
-        newEventHandler(WT.weapon.handleHits)
+      newEventHandler(WT.weapon.handleEvents)
     end
-    local instance=WT.weapon.newImpactNearInstance(filter,target,range,flag)
-    WT.weapon.instances[#WT.weapon.instances+1]=instance
+    local instance = WT.weapon.newImpactNearInstance(filter, target, range, flag)
+    WT.weapon.instances[#WT.weapon.instances + 1] = instance
     return instance
   end
 
@@ -2056,13 +2120,12 @@ do
   ---@param filter weaponFilter
   ---@param zone string
   ---@param flag string
-  function WT.weapon.inZone(filter,zone,flag)
+  function WT.weapon.inZone(filter, zone, flag)
     if #WT.weapon.instances < 1 then
-        newEventHandler(WT.weapon.handleShots)
-        newEventHandler(WT.weapon.handleHits)
+      newEventHandler(WT.weapon.handleEvents)
     end
-    local instance=WT.weapon.newZoneInstance(filter,zone,flag)
-    WT.weapon.instances[#WT.weapon.instances+1]=instance
+    local instance = WT.weapon.newZoneInstance(filter, zone, flag)
+    WT.weapon.instances[#WT.weapon.instances + 1] = instance
     return instance
   end
 
@@ -2070,20 +2133,33 @@ do
   ---@param filter weaponFilter
   ---@param zone string
   ---@param flag string
-  function WT.weapon.impactInZone(filter,zone,flag)
+  function WT.weapon.impactInZone(filter, zone, flag)
     if #WT.weapon.instances < 1 then
-        newEventHandler(WT.weapon.handleShots)
-        newEventHandler(WT.weapon.handleHits)
+      newEventHandler(WT.weapon.handleEvents)
     end
-    local instance=WT.weapon.newImpactZoneInstance(filter,zone,flag)
-    WT.weapon.instances[#WT.weapon.instances+1]=instance
+    local instance = WT.weapon.newImpactZoneInstance(filter, zone, flag)
+    WT.weapon.instances[#WT.weapon.instances + 1] = instance
+    return instance
+  end
+
+
+  ---comment
+  ---@param filter weaponFilter
+  ---@param flag string
+  function WT.weapon.shot(filter, flag)
+    if #WT.weapon.instances < 1 then
+      newEventHandler(WT.weapon.handleEvents)
+    end
+    local instance = WT.weapon.newShotInstance(filter, flag)
+    WT.weapon.instances[#WT.weapon.instances + 1] = instance
     return instance
   end
 
   ---comment
   function WT.weapon.Debug()
-      WT.weapon.debug=true
+    WT.weapon.debug = true
   end
+
   ------------------------------------------
   --System init calls here
   ------------------------------------------
