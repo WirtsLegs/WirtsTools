@@ -263,10 +263,9 @@ WT.coverMe.setup(group,coalition,distance)
 ### Invis Alt
 Toggles invisibility when units go below(or above) a given AGL, note that since invis is at a group level this
 only works properly when each unit is in a group of 1
-`
 **alt** `<Number>`: altitude (AGL) below which a group should be invisible  
 **side** `<Number>`: coalition enum (1 for red or 2 for blue) will apply to all players on that side  
-**higher** `<bool>`: if true will make the groups invisible if they are above the alt instead of below it
+**higher** `<bool>`: if true will make the groups invisible if they are above the alt instead of below it  
 ```lua
 WT.invisAlt.setup(alt,side,higher)
 ```
@@ -319,7 +318,7 @@ WT.tasking.task(group,task,relative)
 ```
   
 ### Stormtrooper AA  
-Makes designated AA units shoot in the vincinity of valid targets instead of at them, note that at this time there is a bug where units tasked to fire at point will ignore that order if there is a valid target nearby, meaning to use this properly for now your targets need to be invisible
+Makes designated AA units shoot in the vincinity of valid targets instead of at them, note that at this time there is a bug where units tasked to fire at point will ignore that order if there is a valid target nearby, meaning to use this properly for now your targets need to be invisible, or you need to use neutral units as your shooters, or finally you can use opposing units if you set them to restrict targets only engage ground
 
 **side** `<Number>`: side of the expected targets (yes you can make blue shoot blue)  
 **shooters** `<Number>`: side of the AA you wish to control (all AA must be group name starts with AA_)  
