@@ -262,7 +262,7 @@ WT.coverMe.setup(group,coalition,distance)
 
 ### Invis Alt
 Toggles invisibility when units go below(or above) a given AGL, note that since invis is at a group level this
-only works properly when each unit is in a group of 1
+only works properly when each unit is in a group of 1  
 **alt** `<Number>`: altitude (AGL) below which a group should be invisible  
 **side** `<Number>`: coalition enum (1 for red or 2 for blue) will apply to all players on that side  
 **higher** `<bool>`: if true will make the groups invisible if they are above the alt instead of below it  
