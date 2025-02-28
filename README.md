@@ -362,8 +362,8 @@ WT.MLRS.setup(nil) --will function on all MLRS launches
 ### Percent Alive  
 Updates a flag with the overal percent (0 - 100) of the units in the designated groups that are alive.  
 
-**groups** `<table>`: table of the group names you want this to apply to, use nil for all MLRS units  
-**flag** `<string>`: the name of the fag you want the alive status to be updated through  
+**groups** `<table>`: table of the group names you want this to apply to  
+**flag** `<string>`: the name of the flag you want the alive status to be updated through  
 ```lua
 WT.percentAlive.setup(groups,flag)
 ```  
