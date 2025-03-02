@@ -238,6 +238,7 @@ do
       WarheadType_neg = {},
       Coalition_neg = {},
       Name_neg = {},
+      Function_neg
 
       terms = 0,
 
@@ -268,8 +269,11 @@ do
       end,
 
       checkFilter = function(self, weapon, debug)
+        if not debug then
+          local debug=false
+        end
         if self.terms == 0 then
-          if debug and debug == true then
+          if debug == true then
             if weapon then
               local name        = weapon:getTypeName()
               local side        = weapon:getCoalition()
@@ -292,7 +296,7 @@ do
         end
 
         if weapon == nil then
-          if debug and debug == true then
+          if debug == true then
             trigger.action.outText("weapon nil")
           end
           return false;
@@ -312,7 +316,7 @@ do
         local missileCat  = desc.missileCategory      -- e.g. Weapon.MissileCategory.AAM
         local warheadType = desc.warheadType          -- e.g. Weapon.WarheadType.HE
         -- (Depending on DCS version, you might need to check desc.warhead or something else.)
-        if debug and debug == true then
+        if debug == true then
           trigger.action.outText("Filter Check Weapon", 5, false)
           trigger.action.outText("name: " .. name, 5, false)
           trigger.action.outText("coalition: " .. side, 5, false)
@@ -325,7 +329,7 @@ do
         if self.Name and #self.Name > 0 then
           -- If we have a positive Category filter, the weapon's Name must be in that list
           if not isInList(self.Name, name) then
-            if debug and debug == true then
+            if debug == true then
               trigger.action.outText("Name filter", 5, false)
             end
             return false
@@ -335,7 +339,7 @@ do
         if self.Name_neg and #self.Name_neg > 0 then
           -- If the weapon's Name is in our negative list, fail
           if isInList(self.Name_neg, name) then
-            if debug and debug == true then
+            if debug == true then
               trigger.action.outText("Name neg filter", 5, false)
             end
             return false
@@ -344,7 +348,7 @@ do
         if self.Coalition and #self.Coalition > 0 then
           -- If we have a positive Category filter, the weapon's Name must be in that list
           if not isInList(self.Coalition, side) then
-            if debug and debug == true then
+            if debug == true then
               trigger.action.outText("Coalition filter", 5, false)
             end
             return false
@@ -354,7 +358,7 @@ do
         if self.Coalition_neg and #self.Coalition_neg > 0 then
           -- If the weapon's Name is in our negative list, fail
           if isInList(self.Coalition_neg, side) then
-            if debug and debug == true then
+            if debug == true then
               trigger.action.outText("Coalition neg filter", 5, false)
             end
             return false
@@ -365,7 +369,7 @@ do
         if self.Category and #self.Category > 0 then
           -- If we have a positive Category filter, the weapon's category must be in that list
           if not isInList(self.Category, cat) then
-            if debug and debug == true then
+            if debug == true then
               trigger.action.outText("Category filter", 5, false)
             end
             return false
@@ -375,7 +379,7 @@ do
         if self.Category_neg and #self.Category_neg > 0 then
           -- If the weapon's category is in our negative list, fail
           if isInList(self.Category_neg, cat) then
-            if debug and debug == true then
+            if debug == true then
               trigger.action.outText("Category neg filter", 5, false)
             end
             return false
@@ -385,7 +389,7 @@ do
         -- 2) Check GuidanceType (positive)
         if self.GuidanceType and #self.GuidanceType > 0 then
           if not isInList(self.GuidanceType, guidance) then
-            if debug and debug == true then
+            if debug == true then
               trigger.action.outText("Guidance filter", 5, false)
             end
             return false
@@ -394,7 +398,7 @@ do
         -- 2b) Negative
         if self.GuidanceType_neg and #self.GuidanceType_neg > 0 then
           if isInList(self.GuidanceType_neg, guidance) then
-            if debug and debug == true then
+            if debug == true then
               trigger.action.outText("Guidance neg filter", 5, false)
             end
             return false
@@ -404,7 +408,7 @@ do
         -- 3) Check MissileCategory (positive)
         if self.MissileCategory and #self.MissileCategory > 0 then
           if not isInList(self.MissileCategory, missileCat) then
-            if debug and debug == true then
+            if debug == true then
               trigger.action.outText("Missile Category filter", 5, false)
             end
             return false
@@ -413,7 +417,7 @@ do
         -- 3b) Negative
         if self.MissileCategory_neg and #self.MissileCategory_neg > 0 then
           if isInList(self.MissileCategory_neg, missileCat) then
-            if debug and debug == true then
+            if debug == true then
               trigger.action.outText("Missile Category neg filter", 5, false)
             end
             return false
@@ -423,7 +427,7 @@ do
         -- 4) Check WarheadType (positive)
         if self.WarheadType and #self.WarheadType > 0 then
           if not isInList(self.WarheadType, warheadType) then
-            if debug and debug == true then
+            if debug == true then
               trigger.action.outText("Warhead filter", 5, false)
             end
             return false
@@ -432,10 +436,33 @@ do
         -- 4b) Negative
         if self.WarheadType_neg and #self.WarheadType_neg > 0 then
           if isInList(self.WarheadType_neg, warheadType) then
-            if debug and debug == true then
+            if debug == true then
               trigger.action.outText("Warhead neg filter", 5, false)
             end
             return false
+          end
+        end
+
+        if self.Function and #self.Function > 0 then
+          for _, func in ipairs(self.Function) do
+            if func(weapon,debug)==false then
+              if debug == true then
+                trigger.action.outText("Function filter", 5, false)
+              end
+              return false
+            end
+          end
+          end
+        end
+        -- 4b) Negative
+        if self.Function_neg and #self.Function_neg > 0 then
+          for _, func in ipairs(self.Function_neg) do
+            if func(weapon,debug)==true then
+              if debug == true then
+                trigger.action.outText("Function filter", 5, false)
+              end
+              return false
+            end
           end
         end
 
