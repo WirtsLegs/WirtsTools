@@ -230,6 +230,7 @@ do
       WarheadType = {},
       Coalition = {},
       Name = {},
+      Function = {},
 
       Category_neg = {},
       GuidanceType_neg = {},
