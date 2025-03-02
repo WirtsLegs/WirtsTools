@@ -27,14 +27,14 @@ do
     return retval
   end
 
-  local function WT.utils.TableConcat(t1, t2)
+  function WT.utils.TableConcat(t1, t2)
     for i = 1, #t2 do
       t1[#t1 + 1] = t2[i]
     end
     return t1
   end
 
-  local function WT.utils.deepCopy(object)
+  function WT.utils.deepCopy(object)
     local lookup_table = {}
     local function _copy(object)
       if type(object) ~= "table" then
@@ -52,7 +52,7 @@ do
     return _copy(object)
   end
 
-  local function WT.utils.isInList(list, value)
+  function WT.utils.isInList(list, value)
     for _, v in ipairs(list) do
       if v == value then
         return true
