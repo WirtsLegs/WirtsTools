@@ -556,6 +556,9 @@ do
       flag = flag,
       active = true,
       present = {},
+      updateFunc = {},
+      changeFunc = {},
+
       type = WT.weapon.instanceTypes.NEAR,
 
       deactivate = function(self)
@@ -566,6 +569,26 @@ do
 
       activate = function(self)
         self.active = true
+      end,
+
+      addUpdateFunc = function(self, func)
+        self.updateFunc[#self.updateFunc + 1] = func
+      end,
+
+      addChangeFunc = function(self, func)
+        self.changeFunc[#self.changeFunc + 1] = func
+      end,
+
+      triggerChange = function(self,wep)
+        for i = 1, #self.changeFunc do
+          self.changeFunc[i]({instance=self,weapon = wep})
+        end
+      end,
+
+      triggerUpdate = function(self,wep)
+        for i = 1, #self.updateFunc do
+          self.updateFunc[i]({instance=self,weapon = wep})
+        end
       end,
 
       checkEvent = function(self, event)
@@ -584,6 +607,7 @@ do
           if self.present[r] == wep.id then
             table.remove(self.present, r)
             trigger.action.setUserFlag(self.flag, #self.present)
+            self:triggerChange(wep)
             break
           end
         end
@@ -591,6 +615,7 @@ do
 
       weaponUpdate = function(self, wep)
         local ref = {}
+        self:triggerUpdate(wep)
         if self.tgtType == "group" then
           local g = p(Group.getByName, self.target)
           if g then
@@ -617,12 +642,14 @@ do
           if not isInList(self.present, wep.id) then
             self.present[#self.present + 1] = wep.id
             trigger.action.setUserFlag(self.flag, #self.present)
+            self:triggerChange(wep)
           end
         else
           for r = 1, #self.present do
             if self.present[r] == wep.id then
               table.remove(self.present, r)
               trigger.action.setUserFlag(self.flag, #self.present)
+              self:triggerChange(wep)
               break
             end
           end
@@ -653,6 +680,7 @@ do
       flag = flag,
       active = true,
       impacts = 0,
+      changeFunc = {},
       type = WT.weapon.instanceTypes.IMPACT_NEAR,
 
 
@@ -665,9 +693,22 @@ do
       activate = function(self)
         self.active = true
       end,
+
       weaponUpdate = function(self, wep)
         return false
       end,
+
+
+      addChangeFunc = function(self, func)
+        self.changeFunc[#self.changeFunc + 1] = func
+      end,
+
+      triggerChange = function(self,wep)
+        for i = 1, #self.changeFunc do
+          self.changeFunc[i]({instance=self,weapon = wep})
+        end
+      end,
+
 
       checkEvent = function(self, event)
         if event.id == world.event.S_EVENT_SHOT then
@@ -715,6 +756,7 @@ do
           if dist <= self.range then
             self.impacts = self.impacts + 1
             trigger.action.setUserFlag(self.flag, self.impacts)
+            self:triggerChange(wep)
             return
           end
         end
@@ -730,6 +772,8 @@ do
       flag = flag,
       active = true,
       present = {},
+      updateFunc = {},
+      changeFunc = {},
       type = WT.weapon.instanceTypes.IN_ZONE,
 
 
@@ -743,11 +787,32 @@ do
         self.active = true
       end,
 
+      addUpdateFunc = function(self, func)
+        self.updateFunc[#self.updateFunc + 1] = func
+      end,
+
+      addChangeFunc = function(self, func)
+        self.changeFunc[#self.changeFunc + 1] = func
+      end,
+
+      triggerChange = function(self,wep)
+        for i = 1, #self.changeFunc do
+          self.changeFunc[i]({instance=self,weapon = wep})
+        end
+      end,
+
+      triggerUpdate = function(self,wep)
+        for i = 1, #self.updateFunc do
+          self.updateFunc[i]({instance=self,weapon = wep})
+        end
+      end,
+
       weaponGone = function(self, wep)
         for r = 1, #self.present do
           if self.present[r] == wep.id then
             table.remove(self.present, r)
             trigger.action.setUserFlag(self.flag, #self.present)
+            self:triggerChange(wep)
             break
           end
         end
@@ -766,16 +831,19 @@ do
 
       weaponUpdate = function(self, wep)
         local pos = wep.last_point
+        self:triggerUpdate(wep)
         if WT.inZone({ x = pos.x, y = pos.z }, WT.zones[self.zone]) == true then
           if not isInList(self.present, wep.id) then
             self.present[#self.present + 1] = wep.id
             trigger.action.setUserFlag(self.flag, #self.present)
+            self:triggerChange(wep)
           end
         else
           for r = 1, #self.present do
             if self.present[r] == wep.id then
               table.remove(self.present, r)
               trigger.action.setUserFlag(self.flag, #self.present)
+              self:triggerChange(wep)
               break
             end
           end
@@ -792,6 +860,7 @@ do
       flag = flag,
       active = true,
       impacts = 0,
+      changeFunc = {},
       type = WT.weapon.instanceTypes.IN_ZONE,
 
 
@@ -803,6 +872,16 @@ do
 
       activate = function(self)
         self.active = true
+      end,
+
+      addChangeFunc = function(self, func)
+        self.changeFunc[#self.changeFunc + 1] = func
+      end,
+
+      triggerChange = function(self,wep)
+        for i = 1, #self.changeFunc do
+          self.changeFunc[i]({instance=self,weapon = wep})
+        end
       end,
 
       weaponUpdate = function(self, wep)
@@ -829,6 +908,7 @@ do
         if WT.inZone({ x = pos.x, y = pos.z }, WT.zones[self.zone]) == true then
           self.impacts = self.impacts + 1
           trigger.action.setUserFlag(self.flag, self.impacts)
+          self:triggerChange(wep)
         end
       end
     }
@@ -841,6 +921,8 @@ do
       flag = flag,
       active = true,
       shots = 0,
+      updateFunc = {},
+      changeFunc = {},
       type = WT.weapon.instanceTypes.SHOT,
 
 
@@ -856,12 +938,34 @@ do
         return
       end,
 
+      addUpdateFunc = function(self, func)
+        self.updateFunc[#self.updateFunc + 1] = func
+      end,
+
+      addChangeFunc = function(self, func)
+        self.changeFunc[#self.changeFunc + 1] = func
+      end,
+
+      triggerChange = function(self,wep)
+        for i = 1, #self.changeFunc do
+          self.changeFunc[i]({instance=self,weapon = wep})
+        end
+      end,
+
+      triggerUpdate = function(self,wep)
+        for i = 1, #self.updateFunc do
+          self.updateFunc[i]({instance=self,weapon = wep})
+        end
+      end,
+
       checkEvent = function(self, event)
         if event.id == world.event.S_EVENT_SHOT then
+          self:triggerUpdate(event)
           if self.active == true then
             if self.filter:checkFilter(event.weapon, WT.weapon.debug) == true then
               self.shots=self.shots+1
               trigger.action.setUserFlag(self.flag, self.shots)
+              self:triggerChange(event)
             end
           end
         end
@@ -886,6 +990,8 @@ do
       flag = flag,
       active = true,
       hits = 0,
+      updateFunc = {},
+      changeFunc = {},
       type = WT.weapon.instanceTypes.HIT,
 
 
@@ -899,6 +1005,26 @@ do
         self.active = true
       end,
 
+      addUpdateFunc = function(self, func)
+        self.updateFunc[#self.updateFunc + 1] = func
+      end,
+
+      addChangeFunc = function(self, func)
+        self.changeFunc[#self.changeFunc + 1] = func
+      end,
+
+      triggerChange = function(self,wep)
+        for i = 1, #self.changeFunc do
+          self.changeFunc[i]({instance=self,weapon = wep})
+        end
+      end,
+
+      triggerUpdate = function(self,wep)
+        for i = 1, #self.updateFunc do
+          self.updateFunc[i]({instance=self,weapon = wep})
+        end
+      end,
+
       checkEvent = function(self, event)
         if event.id == world.event.HIT then
           local weapon = event.weapon
@@ -907,6 +1033,7 @@ do
             if tgtName ~= self.target then
               return
             end
+            self:triggerUpdate(event)
           else
             return
           end
@@ -917,6 +1044,7 @@ do
             end
             self.hits = self.hits + 1
             trigger.action.setUserFlag(self.flag, self.hits)
+            self:triggerChange(event)
           elseif WT.weapon.debug == true then
             trigger.action.outText("invalid hit", 5, false)
           end
