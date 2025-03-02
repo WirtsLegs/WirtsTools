@@ -236,6 +236,7 @@ do
     end
     return false
   end
+  WT.support={}
 
   WT.weapon = {}
   WT.weapon.debug = false
