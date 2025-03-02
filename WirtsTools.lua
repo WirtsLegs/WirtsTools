@@ -18,7 +18,7 @@ do
   end
 
   --protected call (error handling)
-  local function p(...)
+  function WT.utils.p(...)
     local status, retval = pcall(...)
     env.warning(retval, false)
     if not status then
@@ -27,14 +27,14 @@ do
     return retval
   end
 
-  local function TableConcat(t1, t2)
+  local function WT.utils.TableConcat(t1, t2)
     for i = 1, #t2 do
       t1[#t1 + 1] = t2[i]
     end
     return t1
   end
 
-  local function deepCopy(object)
+  local function WT.utils.deepCopy(object)
     local lookup_table = {}
     local function _copy(object)
       if type(object) ~= "table" then
@@ -52,7 +52,7 @@ do
     return _copy(object)
   end
 
-  local function isInList(list, value)
+  local function WT.utils.isInList(list, value)
     for _, v in ipairs(list) do
       if v == value then
         return true
@@ -115,17 +115,15 @@ do
   end
 
   --create event handler
-  local function newEventHandler(f)
+  function WT.utils.newEventHandler(f)
     local handler = {}
-    idNum = idNum + 1
-    handler.id = idNum
     handler.f = f
     function handler:onEvent(event)
       self.f(event)
     end
 
     world.addEventHandler(handler)
-    return handler.id
+    return handler
   end
 
   function WT.utils.VecMag(vec)
@@ -186,7 +184,7 @@ do
       args.unit = Unit.getByName(unit)
     end
     if args.unit then
-      local point = p(unit.getPoint, args.unit)
+      local point = WT.utils.p(unit.getPoint, args.unit)
       if point then
         trigger.action.explosion(point, args.power)
       end
@@ -236,7 +234,7 @@ do
     end
     return false
   end
-  WT.support={}
+  
 
   WT.weapon = {}
   WT.weapon.debug = false
@@ -358,7 +356,7 @@ do
         -- 1) Check Name (positive)
         if self.Name and #self.Name > 0 then
           -- If we have a positive Category filter, the weapon's Name must be in that list
-          if not isInList(self.Name, name) then
+          if not WT.utils.isInList(self.Name, name) then
             if debug == true then
               trigger.action.outText("Name filter", 5, false)
             end
@@ -368,7 +366,7 @@ do
         -- 1b) Check Name (negative)
         if self.Name_neg and #self.Name_neg > 0 then
           -- If the weapon's Name is in our negative list, fail
-          if isInList(self.Name_neg, name) then
+          if WT.utils.isInList(self.Name_neg, name) then
             if debug == true then
               trigger.action.outText("Name neg filter", 5, false)
             end
@@ -377,7 +375,7 @@ do
         end
         if self.Coalition and #self.Coalition > 0 then
           -- If we have a positive Category filter, the weapon's Name must be in that list
-          if not isInList(self.Coalition, side) then
+          if not WT.utils.isInList(self.Coalition, side) then
             if debug == true then
               trigger.action.outText("Coalition filter", 5, false)
             end
@@ -387,7 +385,7 @@ do
         -- 1b) Check Name (negative)
         if self.Coalition_neg and #self.Coalition_neg > 0 then
           -- If the weapon's Name is in our negative list, fail
-          if isInList(self.Coalition_neg, side) then
+          if WT.utils.isInList(self.Coalition_neg, side) then
             if debug == true then
               trigger.action.outText("Coalition neg filter", 5, false)
             end
@@ -398,7 +396,7 @@ do
         -- 1) Check Category (positive)
         if self.Category and #self.Category > 0 then
           -- If we have a positive Category filter, the weapon's category must be in that list
-          if not isInList(self.Category, cat) then
+          if not WT.utils.isInList(self.Category, cat) then
             if debug == true then
               trigger.action.outText("Category filter", 5, false)
             end
@@ -408,7 +406,7 @@ do
         -- 1b) Check Category (negative)
         if self.Category_neg and #self.Category_neg > 0 then
           -- If the weapon's category is in our negative list, fail
-          if isInList(self.Category_neg, cat) then
+          if WT.utils.isInList(self.Category_neg, cat) then
             if debug == true then
               trigger.action.outText("Category neg filter", 5, false)
             end
@@ -418,7 +416,7 @@ do
 
         -- 2) Check GuidanceType (positive)
         if self.GuidanceType and #self.GuidanceType > 0 then
-          if not isInList(self.GuidanceType, guidance) then
+          if not WT.utils.isInList(self.GuidanceType, guidance) then
             if debug == true then
               trigger.action.outText("Guidance filter", 5, false)
             end
@@ -427,7 +425,7 @@ do
         end
         -- 2b) Negative
         if self.GuidanceType_neg and #self.GuidanceType_neg > 0 then
-          if isInList(self.GuidanceType_neg, guidance) then
+          if WT.utils.isInList(self.GuidanceType_neg, guidance) then
             if debug == true then
               trigger.action.outText("Guidance neg filter", 5, false)
             end
@@ -437,7 +435,7 @@ do
 
         -- 3) Check MissileCategory (positive)
         if self.MissileCategory and #self.MissileCategory > 0 then
-          if not isInList(self.MissileCategory, missileCat) then
+          if not WT.utils.isInList(self.MissileCategory, missileCat) then
             if debug == true then
               trigger.action.outText("Missile Category filter", 5, false)
             end
@@ -446,7 +444,7 @@ do
         end
         -- 3b) Negative
         if self.MissileCategory_neg and #self.MissileCategory_neg > 0 then
-          if isInList(self.MissileCategory_neg, missileCat) then
+          if WT.utils.isInList(self.MissileCategory_neg, missileCat) then
             if debug == true then
               trigger.action.outText("Missile Category neg filter", 5, false)
             end
@@ -456,7 +454,7 @@ do
 
         -- 4) Check WarheadType (positive)
         if self.WarheadType and #self.WarheadType > 0 then
-          if not isInList(self.WarheadType, warheadType) then
+          if not WT.utils.isInList(self.WarheadType, warheadType) then
             if debug == true then
               trigger.action.outText("Warhead filter", 5, false)
             end
@@ -465,7 +463,7 @@ do
         end
         -- 4b) Negative
         if self.WarheadType_neg and #self.WarheadType_neg > 0 then
-          if isInList(self.WarheadType_neg, warheadType) then
+          if WT.utils.isInList(self.WarheadType_neg, warheadType) then
             if debug == true then
               trigger.action.outText("Warhead neg filter", 5, false)
             end
@@ -517,7 +515,7 @@ do
   WT.weapon.filters.SHELLS:addTerm("Category", Weapon.Category.SHELL)
 
   function WT.weapon.updateWeapon(weapon, time)
-    if p(weapon.weapon.isExist, weapon.weapon) then
+    if WT.utils.p(weapon.weapon.isExist, weapon.weapon) then
       weapon.last_point = weapon.weapon:getPoint()
       for i = 1, #weapon.instances do
         weapon.instances[i]:weaponUpdate(weapon)
@@ -567,9 +565,9 @@ do
 
   function WT.weapon.newNearInstance(filter, target, range, flag)
     local tgt_type = ""
-    local tgt = p(Unit.getByName, target)
+    local tgt = WT.utils.p(Unit.getByName, target)
     if tgt == nil then
-      tgt = p(Group.getByName, target)
+      tgt = WT.utils.p(Group.getByName, target)
       if tgt == nil then
         return nil
       end
@@ -647,9 +645,9 @@ do
         local ref = {}
         self:triggerUpdate(wep)
         if self.tgtType == "group" then
-          local g = p(Group.getByName, self.target)
+          local g = WT.utils.p(Group.getByName, self.target)
           if g then
-            local u = p(Group.getUnit, g, 1)
+            local u = WT.utils.p(Group.getUnit, g, 1)
             if u then
               ref = u:getPoint()
             else
@@ -659,7 +657,7 @@ do
             return
           end
         else
-          local u = p(Unit.getByName, self.target)
+          local u = WT.utils.p(Unit.getByName, self.target)
           if u then
             ref = u:getPoint()
           else
@@ -669,7 +667,7 @@ do
         local pos = wep.last_point
         local dist = WT.utils.VecMag{ x = pos.x - ref.x, y = pos.y - ref.y, z = pos.z - ref.z }
         if dist <= self.range then
-          if not isInList(self.present, wep.id) then
+          if not WT.utils.isInList(self.present, wep.id) then
             self.present[#self.present + 1] = wep.id
             trigger.action.setUserFlag(self.flag, #self.present)
             self:triggerChange(wep)
@@ -691,9 +689,9 @@ do
 
   function WT.weapon.newImpactNearInstance(filter, target, range, flag)
     local tgt_type = ""
-    local tgt = p(Unit.getByName, target)
+    local tgt = WT.utils.p(Unit.getByName, target)
     if tgt == nil then
-      tgt = p(Group.getByName, target)
+      tgt = WT.utils.p(Group.getByName, target)
       if tgt == nil then
         return nil
       end
@@ -759,9 +757,9 @@ do
           return
         end
         if self.tgtType == "group" then
-          local g = p(Group.getByName, self.target)
+          local g = WT.utils.p(Group.getByName, self.target)
           if g then
-            local u = p(Group.getUnits, g)
+            local u = WT.utils.p(Group.getUnits, g)
             if u then
               for j = 1, #u do
                 ref[#ref + 1] = u[j]:getPoint()
@@ -773,7 +771,7 @@ do
             return
           end
         else
-          local u = p(Unit.getByName, self.target)
+          local u = WT.utils.p(Unit.getByName, self.target)
           if u then
             ref[#ref + 1] = u:getPoint()
           else
@@ -863,7 +861,7 @@ do
         local pos = wep.last_point
         self:triggerUpdate(wep)
         if WT.inZone({ x = pos.x, y = pos.z }, WT.zones[self.zone]) == true then
-          if not isInList(self.present, wep.id) then
+          if not WT.utils.isInList(self.present, wep.id) then
             self.present[#self.present + 1] = wep.id
             trigger.action.setUserFlag(self.flag, #self.present)
             self:triggerChange(wep)
@@ -1059,7 +1057,7 @@ do
         if event.id == world.event.HIT then
           local weapon = event.weapon
           if event.target then
-            local tgtName = p(Unit.getName, event.target)
+            local tgtName = WT.utils.p(Unit.getName, event.target)
             if tgtName ~= self.target then
               return
             end
@@ -1092,7 +1090,7 @@ do
   local function destroyIt(target)
     if target then
       if target:isExist() then
-        local point = p(target.getPoint, target)
+        local point = WT.utils.p(target.getPoint, target)
         trigger.action.explosion(point, 3000)
       end
     end
@@ -1101,7 +1099,7 @@ do
 
   --update weapon position and trigger impact checks
   function WT.missileDeath.updateWeapon(weapon, time)
-    if p(weapon.weapon.isExist, weapon.weapon) then
+    if WT.utils.p(weapon.weapon.isExist, weapon.weapon) then
       weapon.last_point = weapon.weapon:getPoint()
       return time + 0.05
     else
@@ -1109,7 +1107,7 @@ do
         if weapon.target == nil then
           return nil
         end
-        local tp = p(weapon.target.getPoint, weapon.target)
+        local tp = WT.utils.p(weapon.target.getPoint, weapon.target)
         if tp == nil then
           return nil
         end
@@ -1146,23 +1144,23 @@ do
   local playerNear = {}
 
   function playerNear.checkGroups(g1, g2)
-    local group1 = p(Group.getByName, g1)
-    local group2 = p(Group.getByName, g2)
+    local group1 = WT.utils.p(Group.getByName, g1)
+    local group2 = WT.utils.p(Group.getByName, g2)
     if not (group1 and group2) then
       return -1
     end
-    local g1_units = p(Group.getUnits, group1)
-    local g2_units = p(Group.getUnits, group2)
+    local g1_units = WT.utils.p(Group.getUnits, group1)
+    local g2_units = WT.utils.p(Group.getUnits, group2)
     if not (g1_units and g2_units) then
       return -1
     end
     local shortest = -1
 
     for i = 1, #g1_units do
-      local p1 = p(Unit.getPoint, g1_units[i])
+      local p1 = WT.utils.p(Unit.getPoint, g1_units[i])
       if p1 then
         for j = 1, #g2_units do
-          local p2 = p(Unit.getPoint, g2_units[j])
+          local p2 = WT.utils.p(Unit.getPoint, g2_units[j])
           if p2 then
             local dist = WT.utils.VecMag({ x = p1.x - p2.x, y = p1.y - p2.y, z = p1.z - p2.z })
             if shortest > -1 then
@@ -1261,11 +1259,11 @@ do
   end
 
   function coverMe.checkGroups(group, co)
-    local group1 = p(Group.getByName, group)
+    local group1 = WT.utils.p(Group.getByName, group)
     if not (group1) then
       return -1
     end
-    local g1_units = p(Group.getUnits, group1)
+    local g1_units = WT.utils.p(Group.getUnits, group1)
     local g2_units = coverMe.getAIUnits(co) --p(Group.getUnits,group2)
     if not (g1_units and g2_units) then
       return -1
@@ -1273,10 +1271,10 @@ do
     local shortest = -1
 
     for i = 1, #g1_units do
-      local p1 = p(Unit.getPoint, g1_units[i])
+      local p1 = WT.utils.p(Unit.getPoint, g1_units[i])
       if p1 then
         for j = 1, #g2_units do
-          local p2 = p(Unit.getPoint, g2_units[j])
+          local p2 = WT.utils.p(Unit.getPoint, g2_units[j])
           if p2 then
             local dist = WT.utils.VecMag({ x = p1.x - p2.x, y = p1.y - p2.y, z = p1.z - p2.z })
             if shortest > -1 then
@@ -1339,7 +1337,7 @@ do
 
 
   function invisAlt.checkPlayer(player, time)
-    local p = p(player.getPoint, player)
+    local p = WT.utils.p(player.getPoint, player)
     if p == nil then
       return nil
     end
@@ -1483,7 +1481,7 @@ do
   function WT.popFlare.popFlare(details, amount)
     local grp = Group.getByName(details.grp)
     local gid = grp:getID()
-    local unit = p(grp.getUnit, grp, 1)
+    local unit = WT.utils.p(grp.getUnit, grp, 1)
     if unit ~= nil then
       local target = unit:getPoint()
       trigger.action.signalFlare(target, details.colour, 0)
@@ -1528,8 +1526,8 @@ do
   end
 
   function WT.killswitch.updateMenu(details, time)
-    local cntgrp = p(Group.getByName, details.cName)
-    local players = TableConcat(coalition.getPlayers(1), coalition.getPlayers(2))
+    local cntgrp = WT.utils.p(Group.getByName, details.cName)
+    local players = WT.utils.TableConcat(coalition.getPlayers(1), coalition.getPlayers(2))
     local group = nil
     for p = 1, #players do
       if string.match(players[p]:getPlayerName(), details.pname) then
@@ -1680,7 +1678,7 @@ do
         end
 
         if basic == false then
-          local vol = deepCopy(segment)
+          local vol = WT.utils.deepCopy(segment)
 
           vol.from = src
           vol.to = target
@@ -1814,14 +1812,14 @@ do
   WT.MLRS.types = { Smerch = 10, ["Uragan_BM-27"] = 10, ["Grad-URAL"] = 6, MLRS = 7, Smerch_HE = 10 }
 
   function WT.MLRS.remove(weapon, time)
-    p(weapon.destroy, weapon)
+    WT.utils.p(weapon.destroy, weapon)
     return nil
   end
 
   function WT.MLRS.handleShots(event)
     if event.id == world.event.S_EVENT_SHOT then --track fired missiles
       local type = event.initiator:getTypeName()
-      local group = p(event.initiator.getGroup, event.initiator)
+      local group = WT.utils.p(event.initiator.getGroup, event.initiator)
       local name = nil
       if group then
         name = group:getName()
@@ -1879,7 +1877,7 @@ do
   ---------------------------------------------------------------------
   WT.eject = {}
   idNum = 0
-  function newEventHandler(f)
+  function WT.utils.newEventHandler(f)
     local handler = {}
     idNum = idNum + 1
     handler.id = idNum
@@ -1895,7 +1893,7 @@ do
 
   local function cleanupEjection(pilot, time)
     if pilot then
-      p(pilot.destroy, pilot)
+      WT.utils.p(pilot.destroy, pilot)
     end
     return nil
   end
@@ -1920,7 +1918,7 @@ do
   WT.strobe.current = {}
 
   function WT.strobe.strobeOff(details, time)
-    p(details.s.destroy, details.s)
+    WT.utils.p(details.s.destroy, details.s)
     if (WT.strobe.current[details.d.g] == 0) then
       return nil
     end
@@ -1929,7 +1927,7 @@ do
   end
 
   function WT.strobe.strobeOn(details, time)
-    local pos = p(details.u.getPosition, details.u)
+    local pos = WT.utils.p(details.u.getPosition, details.u)
     if pos ~= nil then
       local to = {
         x = pos.p.x + pos.x.x * details.l.x + pos.y.x * details.l.y + pos.z.x * details.l.z,
@@ -1954,7 +1952,7 @@ do
   -----------------------------
   function WT.popFlare.setup(side)
     local groups = coalition.getGroups(side)
-    newEventHandler(WT.popFlare.eventHandle)
+    WT.utils.newEventHandler(WT.popFlare.eventHandle)
     WT.popFlare.side[side] = 1
 
     for g = 1, #groups do
@@ -2044,7 +2042,7 @@ do
     invisAlt.triggerAlt = alt
     invisAlt.higher = higher
     invisAlt.initPlayers(side)
-    newEventHandler(invisAlt.eventHandle)
+    WT.utils.newEventHandler(invisAlt.eventHandle)
   end
 
   ---------------------------------------------------------------------------
@@ -2064,7 +2062,7 @@ do
     suppression.time_on_hit = hit
     suppression.ai_enable = ai
     suppression.all_ground = all
-    newEventHandler(suppression.handleEvents)
+    WT.utils.newEventHandler(suppression.handleEvents)
     timer.scheduleFunction(suppression.checkSuppression, 1, timer.getTime() + 1)
   end
 
@@ -2073,7 +2071,7 @@ do
   --blows up any aircraft that a missile hits
   ---------------------------------------------------------------------------
   function WT.missileDeath.setup()
-    newEventHandler(WT.missileDeath.handleShots)
+    WT.utils.newEventHandler(WT.missileDeath.handleShots)
   end
 
   ---------------------------------------------------------------------------
@@ -2095,20 +2093,20 @@ do
   ---------------------------------------------------------------------------
 
   function WT.tasking.task(group, task, relative)
-    local grp = p(Group.getByName, group)
+    local grp = WT.utils.p(Group.getByName, group)
     if grp and grp:isExist() then
       local cat = grp:getCategory()
-      local u = p(grp.getUnits, grp)
+      local u = WT.utils.p(grp.getUnits, grp)
       if u and WT.tasking.tasks[task] then
         local u1 = u[1]:getPoint()
         local v1 = WT.utils.VecMag(u[1]:getVelocity())
         local tasking = nil
         if cat < 2 then
-          tasking = deepCopy(WT.tasks.airMission)
+          tasking = WT.utils.deepCopy(WT.tasks.airMission)
         else
-          tasking = deepCopy(WT.tasks.groundMission)
+          tasking = WT.utils.deepCopy(WT.tasks.groundMission)
         end
-        tasking.params['route']['points'] = deepCopy(WT.tasking.tasks[task])
+        tasking.params['route']['points'] = WT.utils.deepCopy(WT.tasking.tasks[task])
         if relative then
           if cat < 2 then
             tasking = WT.tasking.relative(u1, tasking, false)
@@ -2180,7 +2178,7 @@ do
         groups[groups[g]] = 1
       end
     end
-    newEventHandler(WT.MLRS.handleShots)
+    WT.utils.newEventHandler(WT.MLRS.handleShots)
   end
 
   ----------------------------------------------
@@ -2198,7 +2196,7 @@ do
   --Ejection Cleanup: simple feature that deletes 50% of ejected pilots immediately and the rest after a minute
   ----------------------------------------------
   function WT.eject.init()
-    newEventHandler(handleEjects)
+    WT.utils.newEventHandler(handleEjects)
   end
 
   ----------------------------------------------
@@ -2255,7 +2253,7 @@ do
   ---@param flag string
   function WT.weapon.near(target, filter, range, flag)
     if #WT.weapon.instances < 1 then
-      newEventHandler(WT.weapon.handleEvents)
+      WT.utils.newEventHandler(WT.weapon.handleEvents)
     end
     local instance = WT.weapon.newNearInstance(filter, target, range, flag)
     WT.weapon.instances[#WT.weapon.instances + 1] = instance
@@ -2264,7 +2262,7 @@ do
 
   function WT.weapon.hit(target, filter, flag)
     if #WT.weapon.instances < 1 then
-      newEventHandler(WT.weapon.handleEvents)
+      WT.utils.newEventHandler(WT.weapon.handleEvents)
     end
     local instance = WT.weapon.newHitInstance(filter, target, flag)
     WT.weapon.instances[#WT.weapon.instances + 1] = instance
@@ -2278,7 +2276,7 @@ do
   ---@param flag string
   function WT.weapon.impactNear(target, filter, range, flag)
     if #WT.weapon.instances < 1 then
-      newEventHandler(WT.weapon.handleEvents)
+      WT.utils.newEventHandler(WT.weapon.handleEvents)
     end
     local instance = WT.weapon.newImpactNearInstance(filter, target, range, flag)
     WT.weapon.instances[#WT.weapon.instances + 1] = instance
@@ -2291,7 +2289,7 @@ do
   ---@param flag string
   function WT.weapon.inZone(filter, zone, flag)
     if #WT.weapon.instances < 1 then
-      newEventHandler(WT.weapon.handleEvents)
+      WT.utils.newEventHandler(WT.weapon.handleEvents)
     end
     local instance = WT.weapon.newZoneInstance(filter, zone, flag)
     WT.weapon.instances[#WT.weapon.instances + 1] = instance
@@ -2304,7 +2302,7 @@ do
   ---@param flag string
   function WT.weapon.impactInZone(filter, zone, flag)
     if #WT.weapon.instances < 1 then
-      newEventHandler(WT.weapon.handleEvents)
+      WT.utils.newEventHandler(WT.weapon.handleEvents)
     end
     local instance = WT.weapon.newImpactZoneInstance(filter, zone, flag)
     WT.weapon.instances[#WT.weapon.instances + 1] = instance
@@ -2317,7 +2315,7 @@ do
   ---@param flag string
   function WT.weapon.shot(filter, flag)
     if #WT.weapon.instances < 1 then
-      newEventHandler(WT.weapon.handleEvents)
+      WT.utils.newEventHandler(WT.weapon.handleEvents)
     end
     local instance = WT.weapon.newShotInstance(filter, flag)
     WT.weapon.instances[#WT.weapon.instances + 1] = instance
