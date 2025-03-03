@@ -77,6 +77,69 @@ do
     WT.zones = zones
   end
 
+  function WT.utils.randomInCircle(center, radius)
+    local angle = math.random() * 2 * math.pi
+    local x = center.x + radius * math.cos(angle)
+    local y = center.y + radius * math.sin(angle)
+    return { x = x, y = y }
+  end
+
+  function WT.utils.randomInSphere(center, radius)
+    local angle = math.random() * 2 * math.pi
+    local z = center.z + radius * (2 * math.random() - 1)
+    local r = (radius ^ 2 - z ^ 2) ^ 0.5
+    local x = center.x + r * math.cos(angle)
+    local y = center.y + r * math.sin(angle)
+    return { x = x, y = y, z = z }
+  end
+
+  function WT.utils.randomInPolygon(polygon)
+    local minX, minY, maxX, maxY = polygon[1].x, polygon[1].y, polygon[1].x, polygon[1].y
+    for i, q in ipairs(polygon) do
+      minX, maxX, minY, maxY = math.min(q.x, minX), math.max(q.x, maxX), math.min(q.y, minY), math.max(q.y, maxY)
+    end
+    local p = { x = math.random(minX, maxX), y = math.random(minY, maxY) }
+    while not WT.utils.isInPolygon(p, polygon) do
+      p = { x = math.random(minX, maxX), y = math.random(minY, maxY) }
+    end
+    return p
+  end
+
+  function WT.utils.getEvenDistributionInCircle(center, radius, count)
+    local points = {}
+    local angleStep = 2 * math.pi / count
+    local currentRadius = radius
+    local currentAngle = 0
+    
+    -- Special case for count = 1
+    if count == 1 then
+      return {{x = center.x, y = center.y}}
+    end
+    
+    -- First point at center if odd count
+    if count % 2 == 1 then
+      table.insert(points, {x = center.x, y = center.y})
+      count = count - 1
+    end
+    
+    -- Calculate concentric circles based on remaining points
+    while count > 0 do
+      local pointsInRing = math.min(count, math.floor(2 * math.pi * currentRadius / radius))
+      local ringAngleStep = 2 * math.pi / pointsInRing
+      
+      for i = 1, pointsInRing do
+        local x = center.x + currentRadius * math.cos(currentAngle)
+        local y = center.y + currentRadius * math.sin(currentAngle)
+        table.insert(points, {x = x, y = y})
+        currentAngle = currentAngle + ringAngleStep
+      end
+      
+      count = count - pointsInRing
+      currentRadius = currentRadius * 0.618 -- Golden ratio for nice spacing
+    end
+    
+    return points
+  end
 
   function WT.utils.polygon(points)
     local polygon = {}
@@ -1777,13 +1840,9 @@ do
     local y = z.point.z
     local rad = z.radius
 
-    local r = rad * math.sqrt(math.random())
-    local theta = math.random() * 2 * math.pi
+    local point = WT.utils.randomInCircle(x, y, rad)
 
-    local targX = x + r * math.cos(theta)
-    local targY = y + r * math.sin(theta)
-
-    return { x = targX, z = targY, y = land.getHeight({ x = targX, y = targY }) }
+    return { x = point.x, z = point.y, y = land.getHeight({ x = point.x, y = point.y }) }
   end
 
   function WT.shelling.shell(details, time)
