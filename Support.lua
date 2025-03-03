@@ -166,9 +166,12 @@ do
                     fire=function(sel,time)
                         if self.rounds>0 then
                             self.rounds=self.rounds-1
+                            --develop the target point, as the original target point, randomized by spread
+                            --then randomized by variance(inherent to the gun based on range)
                             local baseline=self.mission.targetPoint
-                            baseline.x=baseline.x+(math.random() * 2 - 1)*self.mission.spread
-                            baseline.y=baseline.y+(math.random() * 2 - 1)*self.mission.spread
+                            local spread=WT.utils.randomInCircle({x=0,y=0},self.mission.spread)
+                            baseline.x=baseline.x+spread.x
+                            baseline.y=baseline.y+spread.y
                             local target={x=baseline.x+self.mission.adjustments.x,y=baseline.y+self.mission.adjustments.y}
                             local variance_dist=(math.random() * 2 - 1)*self.mission.variance.distance
                             local variance_lat=(math.random() * 2 - 1)*self.mission.variance.lateral
@@ -205,7 +208,6 @@ do
                     rounds = {},
                     range = 0,
                     adjustments = {x = 0, y = 0},
-                    firstShot = false,
                     
                     roundType = WT.support.artillery.shells.HE,
                     spread = 100,
@@ -290,7 +292,23 @@ do
             end,
 
             checkMissionReady=function(self)
-                
+                if self.activeMission then
+                    if self.activeMission.targetPoint=={} then
+                        return false
+                    end
+                    if self.activeMission.rounds=={} then
+                        return false
+                    end
+                    if self.activeMission.range==0 then
+                        return false
+                    end
+                    if self.activeMission.range > self.range and self.range>0 then
+                        return false
+                    end
+                else
+                    return false
+                end
+                return true
             end,
 
             beginFireMission=function(self)
