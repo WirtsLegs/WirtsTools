@@ -259,7 +259,7 @@ do
       WarheadType = {},
       Coalition = {},
       Name = {},
-      Function = {},
+      Func = {},
 
       Category_neg = {},
       GuidanceType_neg = {},
@@ -267,7 +267,7 @@ do
       WarheadType_neg = {},
       Coalition_neg = {},
       Name_neg = {},
-      Function_neg
+      Func_neg = {},
 
       terms = 0,
 
@@ -278,7 +278,7 @@ do
         -- Validate the field name
         if not self[field] and not self[field .. "_neg"] then
           error(string.format(
-          "Unknown filter field '%s'. Must be one of: Category, GuidanceType, MissileCategory, WarheadType, or Name.",
+          "Unknown filter field '%s'. Must be one of: Category, GuidanceType, MissileCategory, WarheadType, Name, or Func.",
             tostring(field)))
         end
 
@@ -472,7 +472,7 @@ do
           end
         end
 
-        if self.Function and #self.Function > 0 then
+        if self.Func and #self.Func > 0 then
           for _, func in ipairs(self.Function) do
             if func(weapon,debug)==false then
               if debug == true then
@@ -484,7 +484,7 @@ do
           end
         end
         -- 4b) Negative
-        if self.Function_neg and #self.Function_neg > 0 then
+        if self.Func_neg and #self.Func_neg > 0 then
           for _, func in ipairs(self.Function_neg) do
             if func(weapon,debug)==true then
               if debug == true then
