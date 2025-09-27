@@ -19,22 +19,46 @@ cat <<EOF > "$OUT"
 ---------------------------------------------------------------------
 EOF
 
-# Add Base.lua
-cat "$BASE" >> "$OUT"
+# Add Base.lua (strip header and copyright like features)
+awk '
+    BEGIN { header_lines=0 }
+    {
+        if (header_lines < 3) {
+            if ($0 ~ /Copyright WirtsLegs/) {
+                # skip copyright notice
+            } else {
+                if (header_lines == 0) {
+                    sub(/\.lua/, "", $0)
+                }
+                print $0
+            }
+            header_lines++
+        } else {
+            print $0
+        }
+    }
+' "$BASE" >> "$OUT"
 
 # Add features
 for f in "$FEATURES_DIR"/*.lua; do
     echo -e "\n\n" >> "$OUT"
     awk '
-        BEGIN { header_done=0 }
-        /^--.*\.lua$/ {
-            # Strip .lua from header
-            sub(/\.lua/, "", $0)
-            print $0
-            next
+        BEGIN { header_lines=0 }
+        {
+            if (header_lines < 3) {
+                if ($0 ~ /Copyright WirtsLegs/) {
+                    # skip copyright notice
+                } else {
+                    if (header_lines == 0) {
+                        sub(/\.lua/, "", $0)
+                    }
+                    print $0
+                }
+                header_lines++
+            } else {
+                print $0
+            }
         }
-        /--Required Notice: Copyright WirtsLegs 2024, \(https:\/\/github.com\/WirtsLegs\/WirtsTools\)/ { next }
-        { print $0 }
     ' "$f" >> "$OUT"
 done
 
