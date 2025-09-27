@@ -400,7 +400,7 @@ local grp = ... --this gets the current group
 WT.strobe.toggleStrobe(grp,true,0.2,{x=-1,y=1,z=0}) --toggles on a strobe 1 meter above and 1 meter back to the local coordinate origin of each unit of the group in question
 ```
 
-#### Advanced: Custom Functions for Weapon Features
+### Advanced: Custom Functions for Weapon Features
 
 Most weapon feature instances (such as those created by `WT.weapon.inZone`, `WT.weapon.near`, etc.) support adding custom functions that are called when certain events occur:
 
