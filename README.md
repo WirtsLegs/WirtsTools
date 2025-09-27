@@ -60,6 +60,8 @@ Note for exact enum values to use see [here](https://wiki.hoggitworld.com/view/D
 
 Finally to debug or otherwise figure out the values for a specific weapon including name run `WT.weapon.Debug()` that will turn on debugging output that will, among other things, print weapon details out to the screen when you fire a weapon  
 
+**For details on adding custom filter functions or event handlers, see [Advanced: Custom Functions for Weapon Features](#advanced-custom-functions-for-weapon-features).**
+
 Ok now how to actually add those terms to the filter, to start we created a filter with  
 
 ```lua
@@ -396,4 +398,56 @@ Final example is meant to be used in a "do script" advanced waypoint action
 ```lua
 local grp = ... --this gets the current group
 WT.strobe.toggleStrobe(grp,true,0.2,{x=-1,y=1,z=0}) --toggles on a strobe 1 meter above and 1 meter back to the local coordinate origin of each unit of the group in question
+```
+
+#### Advanced: Custom Functions for Weapon Features
+
+Most weapon feature instances (such as those created by `WT.weapon.inZone`, `WT.weapon.near`, etc.) support adding custom functions that are called when certain events occur:
+
+- **addUpdateFunc(func)**: Called every time the weapon's position is updated (e.g., in flight).
+- **addChangeFunc(func)**: Called when the weapon's status changes for the instance (e.g., enters/leaves zone/range, impact, etc.).
+
+Each function receives a single table argument containing:
+- `instance`: the instance object
+- `weapon`: the weapon object (or event)
+
+**Example:**
+```lua
+local filter = WT.weapon.newFilter()
+local inst = WT.weapon.inZone(filter, "ZoneName", "flagName")
+
+inst:addUpdateFunc(function(args)
+    -- Called every update for each weapon in the zone
+    local weapon = args.weapon
+    local instance = args.instance
+    -- Custom logic here
+end)
+
+inst:addChangeFunc(function(args)
+    -- Called when a weapon enters or leaves the zone
+    local weapon = args.weapon
+    local instance = args.instance
+    -- Custom logic here
+end)
+```
+
+#### Custom Filter Functions
+
+You can also add custom filter functions to a filter using the `"Func"` field. These functions should accept `(weapon, debug)` and return `true` to pass or `false` to reject.
+
+**Example:**
+```lua
+local filter = WT.weapon.newFilter()
+filter:addTerm("Func", function(weapon, debug)
+    -- Only allow weapons with a specific property
+    return weapon:getTypeName() == "SOME_WEAPON_TYPE"
+end)
+```
+
+Negative custom functions can be added with `"Func"` and `match=false`:
+```lua
+filter:addTerm("Func", function(weapon, debug)
+    -- Reject weapons with a specific property
+    return weapon:getTypeName() == "BAD_WEAPON_TYPE"
+end, false)
 ```
