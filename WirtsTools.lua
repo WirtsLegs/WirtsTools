@@ -7,9 +7,6 @@
 do
   WT = {}
   WT.utils={}
-  if idNum == nil then
-    idNum = 0
-  end
 
 
   --add a startswith function to the lua string object
@@ -117,8 +114,6 @@ do
   --create event handler
   local function newEventHandler(f)
     local handler = {}
-    idNum = idNum + 1
-    handler.id = idNum
     handler.f = f
     function handler:onEvent(event)
       self.f(event)
@@ -301,6 +296,11 @@ do
         if not debug then
           local debug=false
         end
+        local desc = weapon:getDesc()
+        if not desc then
+          -- If getDesc() returns nil for some reason, fail or pass as you see fit
+          return false
+        end
         if self.terms == 0 then
           if debug == true then
             if weapon then
@@ -331,11 +331,7 @@ do
           return false;
         end
 
-        local desc = weapon:getDesc()
-        if not desc then
-          -- If getDesc() returns nil for some reason, fail or pass as you see fit
-          return false
-        end
+
 
         -- Pull out the values we'll check
         local name        = weapon:getTypeName()
@@ -480,7 +476,6 @@ do
               end
               return false
             end
-          end
           end
         end
         -- 4b) Negative
@@ -1877,20 +1872,6 @@ do
   --Ejection Cleanup
   ---------------------------------------------------------------------
   WT.eject = {}
-  idNum = 0
-  function newEventHandler(f)
-    local handler = {}
-    idNum = idNum + 1
-    handler.id = idNum
-    handler.f = f
-
-    function handler:onEvent(event)
-      self.f(event)
-    end
-
-    world.addEventHandler(handler)
-    return handler.id
-  end
 
   local function cleanupEjection(pilot, time)
     if pilot then
