@@ -21,23 +21,12 @@ echo --Directions: load this script as Do Script File, then call setup functions
 echo --See readme for full details >> %OUT%
 echo --------------------------------------------------------------------- >> %OUT%
 
-REM Add Base.lua (optionally strip header like features)
+REM Add Base.lua (skip first 3 lines entirely)
 set header_lines=0
 for /f "usebackq delims=" %%l in ("%BASE%") do (
-    set "line=%%l"
-    if !header_lines! lss 3 (
-        echo !line! | findstr /c:"Copyright WirtsLegs" >nul
-        if !errorlevel! == 0 (
-            REM skip copyright notice
-        ) else (
-            if !header_lines! == 0 (
-                set "line=!line:.lua=!"
-            )
-            echo !line! >> %OUT%
-        )
-        set /a header_lines+=1
-    ) else (
-        echo !line! >> %OUT%
+    set /a header_lines+=1
+    if !header_lines! gtr 3 (
+        echo %%l >> %OUT%
     )
 )
 

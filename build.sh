@@ -19,25 +19,8 @@ cat <<EOF > "$OUT"
 ---------------------------------------------------------------------
 EOF
 
-# Add Base.lua (strip header and copyright like features)
-awk '
-    BEGIN { header_lines=0 }
-    {
-        if (header_lines < 3) {
-            if ($0 ~ /Copyright WirtsLegs/) {
-                # skip copyright notice
-            } else {
-                if (header_lines == 0) {
-                    sub(/\.lua/, "", $0)
-                }
-                print $0
-            }
-            header_lines++
-        } else {
-            print $0
-        }
-    }
-' "$BASE" >> "$OUT"
+# Add Base.lua (skip first 3 lines entirely)
+awk 'NR > 3 { print $0 }' "$BASE" >> "$OUT"
 
 # Add features
 for f in "$FEATURES_DIR"/*.lua; do
