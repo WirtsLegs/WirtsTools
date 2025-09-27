@@ -42,7 +42,7 @@ These features all use a common filter system to define the weapon types you are
 ```lua
 local filter=WT.weapon.newFilter() -- create a new filter and save it to a local variable 'filter'
 ```
-To start the filter is empty, this will match on every weapon fired, you may want that, but you also may not, to get mroe specific we add terms to the filter  
+To start the filter is empty, this will match on every weapon fired, you may want that, but you also may not, to get more specific we add terms to the filter  
 
 Terms are basically requirements any weapon must meet to pass the filter and can be made for a few different properties of the weapon, these are:  
 *   Name: The typename of the weapon, basically be very explicit and only match a specific weapon 
@@ -54,7 +54,7 @@ Terms are basically requirements any weapon must meet to pass the filter and can
 
 You can create any Number of terms for each property, and you can create negative terms as well. The evaluation logic is such that for any given property if there are any positive terms then atleast one of them MUST match, and if there are any negative terms they must all be satisfied  
 
-So for example if Category terms include Weapon.Category.BOMB and Weapon.Category.MISSILE as positive terms then that will match on bombs or missiles, conversly if Warhead Type includes Weapon.WarheadType.AP and Weapon.WarheadType.HE as negative terms then weapons with AP or HE warheads will not be accepted by the filter  
+So for example if Category terms include Weapon.Category.BOMB and Weapon.Category.MISSILE as positive terms then that will match on bombs or missiles, conversely if Warhead Type includes Weapon.WarheadType.AP and Weapon.WarheadType.HE as negative terms then weapons with AP or HE warheads will not be accepted by the filter  
 
 Note for exact enum values to use see [here](https://wiki.hoggitworld.com/view/DCS_enum_weapon)  
 
@@ -67,7 +67,7 @@ local filter=WT.weapon.newFilter()
 ``` 
 Now lets look at the addTerm() function:  
 
-**self** `<filter>`: this just means it takes a filter object, the way you will be calling it you wont have to worry about this argument.  
+**self** `<filter>`: This just means it takes a filter object, the way you will be calling it you wont have to worry about this argument.  
 **field** `<string>`: This is the field name for example Category as a string (possible values are "Name", "Coalition", "Category", "GuidanceType", "MissileCategory", and "WarheadType").  
 **term** `<int/enum>`: This is the value you are looking to match or negate, you can put a Number value like 1, 2, 3, etc as that is what the enumerators technically are, or you can use something like Weapon.Category.MISSILE (I prefer this for readability).  
 **match** `<bool>`: This tells the function if you want to match or negate for this term, if set to true then it will match, if false it will negate, if you dont inclue it this will default to true.  
@@ -80,9 +80,9 @@ filter:addTerm("Categry",Weapon.Categroy.MISSILE,true) --this adds a term to the
 filter:addTerm("GuidanceType",Weapon.GuidanceType.IR,false) --ok the second term we added negates anything guided via IR
 ```
 
-Note when defining these filters you can take a few different approaches, the example used above creates a local variable to hold the filter, so it exists within the scope of the "do script" action you are running it in, this si good for single use approach, defione the filter and immediately pass it to a function  
+Note when defining these filters you can take a few different approaches, the example used above creates a local variable to hold the filter, so it exists within the scope of the "do script" action you are running it in, this is good for single use approach, define the filter and immediately pass it to a function  
 
-However if you plan to use the samne terms for multiple filters/functions you could take an approach like this  
+However if you plan to use the same terms for multiple filters/functions you could take an approach like this  
 
 ```lua
 myFilters={}
@@ -110,7 +110,7 @@ To be able to activate/deactivate you need to save a reference to the instance S
 ```lua
 impactInstance = WT.weapon.inZone(filter,"ZoneName","flagName")
 ``` 
-more details on this function below but here ive created an instance and saved it to a global variable, you could also take an approach similar to the filter table above and define `myInstances = {}` and do this  
+more details on this function below but here I've created an instance and saved it to a global variable, you could also take an approach similar to the filter table above and define `myInstances = {}` and do this  
 ```lua
 myInstances.impactInstance = WT.weapon.impactInZone(filter,"ZoneName","flagName")
 ``` 
@@ -124,7 +124,7 @@ impactInstance:activate()
 ``` 
 note that all instances default activated at time of creation.  
 
-A final point on performance, I did a lot to minimize impact, and indeed you should be run a lot of these features at once (or many instances) without issue, but one of the performance considerations means that any instances created will NOT detect/fire on weapons that were already in flight at time of the instance being created  
+A final point on performance, I did a lot to minimize impact, and indeed you should be able to run a lot of these features at once (or many instances) without issue, but one of the performance considerations means that any instances created will NOT detect/fire on weapons that were already in flight at time of the instance being created  
 
 Right ok, lets talk the actual instance types....  
 
@@ -148,11 +148,11 @@ this will increment a flag called "impactCounter" with each impact in a zone cal
 ### Weapon Impact Near
 This feature is designed to detect when a weapon impacts the ground near a unit or group, (note that for performance reasons impact is defined as the weapon being destroyed within 15meters of the ground).  
 
-This will increment a flag with each weapon impact within a deifned range of either a single unit, or any unit in a group, that matches the defined filter  
+This will increment a flag with each weapon impact within a defined range of either a single unit, or any unit in a group, that matches the defined filter  
 
 **target** `<String>`: Name of a unit or group, the function first looks for a unit with this name, if none found it will look for a group with that name.  
 **filter** `<WT.weapon.filter>`: Pass it a filter.  
-**range** `<Number>`: distance in meters th eimpact must be within to trigger.  
+**range** `<Number>`: distance in meters the impact must be within to trigger.  
 **flag** `<String>`: name of the flag to use  
 ```lua
 WT.weapon.impactNear(target,filter,range,flag)
@@ -207,9 +207,9 @@ WT.weapon.shot(filter,flag)
 ### Weapon Hit
 This feature is designed increment a flag for each time a weapon hits a given target  
   
-This is really designed for very large targets like ships where impactNear with a very small distance isnt appropriate as a proxy for a hit  
+This is really designed for very large targets like ships where impactNear with a very small distance isn't appropriate as a proxy for a hit  
 
-Note that the hit event is extremely unrealiable in multiplayer, especially for player units, in my experience it does work ok for AI ships and such but YMMV, ensure you thoroughly test with this one before using it in multiplayer  
+Note that the hit event is extremely unreliable in multiplayer, especially for player units, in my experience it does work ok for AI ships and such but YMMV, ensure you thoroughly test with this one before using it in multiplayer  
 
 it will increment the provided flag for each hit on the target unit  
 
@@ -251,7 +251,7 @@ WT.playerNear.setup("target-1",{"player"},"flag2",500) --this will increment the
 ```
 
 ### Cover Me
-renders players invisible when there is a allied AI aircraft within a defined range of the player
+renders players invisible when there is an allied AI aircraft within a defined range of the player
 
 **group** `<string>`: group that is covered by AI (1 or 2 for all player redfor or player blufor respectively)  
 **coalition** `<Number>`: coalition of AI players you want to be able to provide cover  
@@ -273,7 +273,7 @@ WT.invisAlt.setup(alt,side,higher)
 ### Suppression
 suppresses ground units when they are shot at, not that it has no wway of knowing the current ROEs so if they are already weapons hold they will go weapons free when shot, after suppression ends as a result,is extremely basic, all hits work so yes infantry can suppress a tank, will iterate on later
 
-**hit** `<Number>`: suuppression time on hit in seconds  
+**hit** `<Number>`: suppression time on hit in seconds  
 **kill** `<Number>`: suppression time on kill in seconds  
 **all** `<boolean>`: should we apply to all ground units or only those whose group name starts with SUP_  
 **side** `<Number>`: 1 for red 2 for blue, nil for both  
@@ -295,7 +295,7 @@ WT.missileDeath.setup()
 ```
 
 ### Kill Switch  
-For multiplayer missions its nice to have F10 radio options as backups/killswitches so you can salavage the mission if something breaks or say for example SEAD fligth all crash, but its not great when those options are exposed to 30 curious pilots fiddling in the radio menu or people that use VAICOM and thus constantly randomly trigger every possible radio option
+For multiplayer missions its nice to have F10 radio options as backups/killswitches so you can salvage the mission if something breaks or say for example SEAD flight all crash, but its not great when those options are exposed to 30 curious pilots fiddling in the radio menu or people that use VAICOM and thus constantly randomly trigger every possible radio option
 
 This function lets you assign radio options based on player name, they will be added/removed to/from groups as needed so that ONLY a group containing a player whose name contains a given string have those options
 
@@ -318,7 +318,7 @@ WT.tasking.task(group,task,relative)
 ```
   
 ### Stormtrooper AA  
-Makes designated AA units shoot in the vincinity of valid targets instead of at them, note that at this time there is a bug where units tasked to fire at point will ignore that order if there is a valid target nearby, meaning to use this properly for now your targets need to be invisible, or you need to use neutral units as your shooters, or finally you can use opposing units if you set them to restrict targets only engage ground
+Makes designated AA units shoot in the vicinity of valid targets instead of at them, note that at this time there is a bug where units tasked to fire at point will ignore that order if there is a valid target nearby, meaning to use this properly for now your targets need to be invisible, or you need to use neutral units as your shooters, or finally you can use opposing units if you set them to restrict targets only engage ground
 
 **side** `<Number>`: side of the expected targets (yes you can make blue shoot blue)  
 **shooters** `<Number>`: side of the AA you wish to control (all AA must be group name starts with AA_)  
@@ -360,7 +360,7 @@ WT.MLRS.setup(nil) --will function on all MLRS launches
 ```  
 
 ### Percent Alive  
-Updates a flag with the overal percent (0 - 100) of the units in the designated groups that are alive.  
+Updates a flag with the overall percent (0 - 100) of the units in the designated groups that are alive.  
 
 **groups** `<table>`: table of the group names you want this to apply to  
 **flag** `<string>`: the name of the flag you want the alive status to be updated through  
@@ -383,7 +383,7 @@ WT.eject.init()
 Creates a blinking IR strobe on units  
 **groups** `<string>` `<group>`: can be either a reference to a group table, or the name of the group as a string  
 **onoff** `<boolean>`: if true then sets the strobe on, if false sets it off, if nil then toggles it (on if currently off, off if currently on)  
-**interval** `<Number>`: time interval that the ir light is on/off eg a interval of 1 would be 1 seond on then 1 second off, personally I find 0.15 or 0.2 works well (note overly long intervals will look strange)  
+**interval** `<Number>`: time interval that the ir light is on/off eg a interval of 1 would be 1 second on then 1 second off, personally I find 0.15 or 0.2 works well (note overly long intervals will look strange)  
 **location** `<Vec3>`: the strobe is attached at this Vec3 point in model local coordinates, nil for a default strobe above the unit  
 Example:  
 ```lua
