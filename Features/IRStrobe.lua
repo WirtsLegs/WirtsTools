@@ -1,5 +1,6 @@
 ---------------------------------------------------------------------
---IR STROBE
+--IRStrobe.lua
+--Required Notice: Copyright WirtsLegs 2024, (https://github.com/WirtsLegs/WirtsTools)
 ---------------------------------------------------------------------
 
 WT.strobe = {}

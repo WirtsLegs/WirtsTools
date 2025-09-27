@@ -1,5 +1,7 @@
--- File: weapon.lua
-
+---------------------------------------------------------------------
+--Weapon.lua
+--Required Notice: Copyright WirtsLegs 2024, (https://github.com/WirtsLegs/WirtsTools)
+---------------------------------------------------------------------
 WT.weapon = {}
 WT.weapon.debug = false
 WT.weapon.instanceTypes = {

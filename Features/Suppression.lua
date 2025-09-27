@@ -1,6 +1,8 @@
 --------------------------------------------------------------------
---Suppression
---------------------------------------------------------------------
+--Suppression.lua
+--Required Notice: Copyright WirtsLegs 2024, (https://github.com/WirtsLegs/WirtsTools)
+---------------------------------------------------------------------
+
 WT.suppression = {}
 local suppression = {}
 suppression.suppressed_groups = {}

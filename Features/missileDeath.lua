@@ -1,6 +1,7 @@
 -----------------------------------------------------------------------
---MissileDeath
-----------------------------------------------------------------------
+--MissileDeath.lua
+--Required Notice: Copyright WirtsLegs 2024, (https://github.com/WirtsLegs/WirtsTools)
+---------------------------------------------------------------------
 WT.missileDeath = {}
 
 local function destroyIt(target)

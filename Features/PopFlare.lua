@@ -1,6 +1,7 @@
 -----------------------------------------------------
---popFlare
------------------------------------------------------
+--PopFlare.lua
+--Required Notice: Copyright WirtsLegs 2024, (https://github.com/WirtsLegs/WirtsTools)
+---------------------------------------------------------------------
 
 WT.popFlare = {}
 WT.popFlare.side = { 0, 0 }
