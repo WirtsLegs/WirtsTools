@@ -58,5 +58,5 @@ end
 --blows up any aircraft that a missile hits
 ---------------------------------------------------------------------------
 function WT.missileDeath.setup()
-    WT.utils.registerEventListener(world.event.S_EVENT_SHOT, WT.missileDeath.handeShots)
+    WT.utils.registerEventListener(world.event.S_EVENT_SHOT, WT.missileDeath.handleShots)
 end

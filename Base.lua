@@ -5,6 +5,15 @@
 WT = {}
 WT.utils = {}
 
+
+local segment = {
+    id = world.VolumeType.SEGMENT,
+    params = {
+        from = {},
+        to = {}
+    }
+}
+
 --add a startswith function to the lua string object
 function string.starts(String, Start)
     return string.sub(String, 1, string.len(Start)) == Start
@@ -25,6 +34,20 @@ function WT.utils.TableConcat(t1, t2)
         t1[#t1 + 1] = t2[i]
     end
     return t1
+end
+
+function WT.utils.getAvgPoint(group)
+    local size = group:getSize()
+    local x, y, z = 0, 0, 0
+    local units = group:getUnits()
+    for u = 1, size do
+        local point = units[u]:getPoint()
+        x = x + point.x
+        y = y + point.y
+        z = z + point.z
+    end
+
+    return { x = x / size, y = y / size, z = z / size }
 end
 
 function WT.utils.deepCopy(object)
@@ -128,8 +151,12 @@ function WT.utils.masterEventHandler(event)
     end
 end
 
--- Register the master handler once
-world.addEventHandler({ onEvent = WT.utils.masterEventHandler })
+-- Register the master handler once using an object with onEvent method
+local WT_eventHandler = {}
+function WT_eventHandler:onEvent(event)
+    WT.utils.masterEventHandler(event)
+end
+world.addEventHandler(WT_eventHandler)
 
 
 function WT.utils.VecMag(vec)
@@ -243,4 +270,3 @@ function WT.utils.inZone(point, zone)
 end
 
 WT.utils.getZones()
-WT.tasking.getGroups()

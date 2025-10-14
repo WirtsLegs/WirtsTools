@@ -90,3 +90,4 @@ function WT.tasking.task(group, task, relative)
         end
     end
 end
+WT.tasking.getGroups() 
