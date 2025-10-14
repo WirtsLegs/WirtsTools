@@ -323,7 +323,7 @@ WT.tasking.task(group,task,relative)
 Makes designated AA units shoot in the vicinity of valid targets instead of at them, note that at this time there is a bug where units tasked to fire at point will ignore that order if there is a valid target nearby, meaning to use this properly for now your targets need to be invisible, or you need to use neutral units as your shooters, or finally you can use opposing units if you set them to restrict targets only engage ground
 
 **side** `<Number>`: side of the expected targets (yes you can make blue shoot blue)  
-**shooters** `<Number>`: side of the AA you wish to control (all AA must be group name starts with AA_)  
+**shooters** `<Number>/<String>/<Group>/<Table<String><Group>>`: side of the AA you wish to control (all AA must be group name starts with AA_) , or the name of a single group, a ref to a single group, a table of groupnames, or a table of group references for the groups you want to control. Note that only the coalition (side) approach requires the AA_ naming scheme
 **advancedLOS** `<bool>`: whether to factor in objects (statics, scenery, and other units) for LOS calculations  
 ```lua
 WT.stormtrooperAA.setup(side,shooters,advancedLOS)
