@@ -4,6 +4,22 @@
 ---------------------------------------------------------------------
 WT.stormtrooperAA = {}
 WT.stormtrooperAA.stormtroopers = {}
+WT.stormtrooperAA.calibrationTable={}
+
+function WT.stormtrooperAA.addCalibration(unitType, maxRange, aimDelay, muzzleVel)
+    local group = Group.getByName(unitType)
+    if group then
+        local units = group:getUnits()
+        if units and #units > 0 then
+            unitType = units[1]:getTypeName()
+        end
+    end
+    local unitObj = Unit.getByName(unitType)
+    if unitObj then
+        unitType = unitObj:getTypeName()
+    end
+    WT.stormtrooperAA.calibrationTable[unitType] = { maxRange = maxRange, aimDelay = aimDelay, muzzleVel = muzzleVel }
+end
 
 
 WT.stormtrooperAA.FireAtPoint = {
@@ -81,8 +97,13 @@ function WT.stormtrooperAA.newStormtrooper()
         end
       end,
 
+      getValidTargets = function(self)
+        local targets = coalition.getPlayers(self.coalition)
+        return targets
+      end,
+
       updateTarget = function(self, time)
-        local players = coalition.getPlayers(self.coalition)
+        local targets = self:getValidTargets()
         local controller = nil
         local nearest = nil
         local nearest_d = nil
@@ -95,11 +116,9 @@ function WT.stormtrooperAA.newStormtrooper()
           ref = self.point
           nearest_d = 999999
           controller = self.active_units:getController()
-          for i = 1, #players do
-            --local detected = controller:isTargetDetected(players[i],1,2)
-            --if detected  then
-            point = players[i]:getPoint()
-            local vel = players[i]:getVelocity()
+          for i = 1, #targets do
+            point = targets[i]:getPoint()
+            local vel = targets[i]:getVelocity()
             local temp_dist = WT.utils.VecMag({ x = point.x - ref.x, y = point.y - ref.y, z = point.z - ref.z })
             point.x = point.x + (7 + 2 * (temp_dist / 3000)) * vel.x
             point.y = point.y + (7 + 2 * (temp_dist / 3000)) * vel.y
