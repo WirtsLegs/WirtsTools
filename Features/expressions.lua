@@ -1,5 +1,5 @@
 WT = WT or {}
-WT.flag = {}
+WT.expressions = {}
 
 -- Utility: Split string by space
 local function split(str)
@@ -16,13 +16,13 @@ local function trim(s)
 end
 
 -- Selection parser: returns a list of unit objects based on selectionExpr
-function WT.flag.getCandidates(selectionExpr)
+function WT.expressions.getCandidates(selectionExpr)
     -- TODO: Implement unit selection logic using DCS API
     return {}
 end
 
 -- Basic keyword handlers: fetch unit parameters
-WT.flag.keywords = {
+WT.expressions.keywords = {
     AGL = function(unit) return 0 end,      -- TODO
     ASL = function(unit) return 0 end,      -- TODO
     SPEED = function(unit) return 0 end,    -- TODO
@@ -32,15 +32,15 @@ WT.flag.keywords = {
 }
 
 -- Complex keyword registry
-WT.flag.complexKeywords = {}
+WT.expressions.complexKeywords = {}
 
 -- Register a complex keyword with argument count and handler
-function WT.flag.registerKeyword(name, argCount, handler)
-    WT.flag.complexKeywords[name] = { argCount = argCount, handler = handler }
+function WT.expressions.registerKeyword(name, argCount, handler)
+    WT.expressions.complexKeywords[name] = { argCount = argCount, handler = handler }
 end
 
 -- Replace logical operators with Lua equivalents
-function WT.flag.normalizeOperators(expr)
+function WT.expressions.normalizeOperators(expr)
     expr = expr:gsub("AND", "and")
     expr = expr:gsub("OR", "or")
     expr = expr:gsub("NOT", "not")
@@ -48,10 +48,10 @@ function WT.flag.normalizeOperators(expr)
 end
 
 -- Preprocess complex keywords: replace with placeholders
-function WT.flag.preprocessComplex(expr)
+function WT.expressions.preprocessComplex(expr)
     return expr:gsub("([A-Z]+%s*:?[%w_]*)", function(term)
         local keyword, args = term:match("^(%w+)%s*(.*)$")
-        local entry = WT.flag.complexKeywords[keyword]
+        local entry = WT.expressions.complexKeywords[keyword]
         if entry then
             local argList = {}
             if args ~= "" then
@@ -71,9 +71,9 @@ function WT.flag.preprocessComplex(expr)
 end
 
 -- Preprocess basic keywords: replace with placeholders
-function WT.flag.preprocessKeywords(expr)
+function WT.expressions.preprocessKeywords(expr)
     return expr:gsub("([%u_]+)", function(term)
-        if WT.flag.keywords[term] then
+        if WT.expressions.keywords[term] then
             return "__KEYWORD_" .. term .. "__"
         else
             return term
@@ -82,7 +82,7 @@ function WT.flag.preprocessKeywords(expr)
 end
 
 -- At construction, preprocess the expression
-function WT.flag.new(selectionExpr, boolExpr, evalMode, threshold)
+function WT.expressions.new(selectionExpr, boolExpr, evalMode, threshold)
     local self = {
         selectionExpr = selectionExpr,
         evalMode = evalMode or "ANY",
@@ -90,9 +90,9 @@ function WT.flag.new(selectionExpr, boolExpr, evalMode, threshold)
     }
 
     -- Preprocess expression: logical ops, complex, then basic keywords
-    local expr = WT.flag.normalizeOperators(boolExpr)
-    expr = WT.flag.preprocessComplex(expr)
-    expr = WT.flag.preprocessKeywords(expr)
+    local expr = WT.expressions.normalizeOperators(boolExpr)
+    expr = WT.expressions.preprocessComplex(expr)
+    expr = WT.expressions.preprocessKeywords(expr)
     self.exprTemplate = expr
     self.complexTerms = {}
     self.basicTerms = {}
@@ -111,7 +111,7 @@ function WT.flag.new(selectionExpr, boolExpr, evalMode, threshold)
         local expr = self.exprTemplate
         -- Substitute complex term placeholders
         for _, entry in ipairs(self.complexTerms) do
-            local handlerEntry = WT.flag.complexKeywords[entry.keyword]
+            local handlerEntry = WT.expressions.complexKeywords[entry.keyword]
             local argList = {}
             if entry.args ~= "" then
                 for arg in string.gmatch(entry.args, "[^_]+") do
@@ -126,7 +126,7 @@ function WT.flag.new(selectionExpr, boolExpr, evalMode, threshold)
         end
         -- Substitute basic keyword placeholders
         for _, entry in ipairs(self.basicTerms) do
-            local value = tostring(WT.flag.keywords[entry.term](unit))
+            local value = tostring(WT.expressions.keywords[entry.term](unit))
             expr = expr:gsub(entry.placeholder, value)
         end
         local ok, result = pcall(function() return loadstring("return " .. expr)() end)
@@ -135,7 +135,7 @@ function WT.flag.new(selectionExpr, boolExpr, evalMode, threshold)
 
     -- Evaluate the whole expression
     function self:evaluate()
-        local candidates = WT.flag.getCandidates(self.selectionExpr)
+        local candidates = WT.expressions.getCandidates(self.selectionExpr)
         local countTrue = 0
         local total = #candidates
         for _, unit in ipairs(candidates) do
@@ -164,17 +164,17 @@ function WT.flag.new(selectionExpr, boolExpr, evalMode, threshold)
 end
 
 -- Example: Register a complex keyword
-WT.flag.registerKeyword("LOCKED", 1, function(unit, lockType)
+WT.expressions.registerKeyword("LOCKED", 1, function(unit, lockType)
     -- TODO: Implement logic to check if unit is locked by lockType (e.g., RADAR)
     return false
 end)
 
-WT.flag.registerKeyword("PROX", 2, function(unit, coalition, unitType)
+WT.expressions.registerKeyword("PROX", 2, function(unit, coalition, unitType)
     -- TODO: Implement logic to get proximity to specified coalition/unitType
     return 99999
 end)
 
 -- Usage example (stub):
--- local expr = WT.flag.new("COALITION RED AIRCRAFT", "AGL > 500 AND LOCKED RADAR", "ANY")
+-- local expr = WT.expressions.new("COALITION RED AIRCRAFT", "AGL > 500 AND LOCKED RADAR", "ANY")
 -- local result = expr:evaluate()
 -- expr:setWhen("FlagX")
