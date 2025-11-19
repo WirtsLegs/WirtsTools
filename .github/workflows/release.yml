@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - pre-release
 
 jobs:
   build-release:

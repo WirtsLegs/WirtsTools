@@ -38,6 +38,10 @@ for %%f in (%FEATURES_DIR%\*.lua) do (
     set header_lines=0
     for /f "usebackq delims=" %%l in ("%%f") do (
         set "line=%%l"
+        REM Remove all spaces and tabs for blank line detection
+        set "stripped=!line!"
+        set "stripped=!stripped: =!"
+        set "stripped=!stripped:	=!"
         if !header_lines! lss 3 (
             echo !line! | findstr /c:"Copyright WirtsLegs" >nul
             if !errorlevel! == 0 (
@@ -45,12 +49,21 @@ for %%f in (%FEATURES_DIR%\*.lua) do (
             ) else (
                 if !header_lines! == 0 (
                     set "line=!line:.lua=!"
+                    set "stripped=!line!"
+                    set "stripped=!stripped: =!"
+                    set "stripped=!stripped:	=!"
                 )
-                echo !line! >> %OUT%
+                REM Only output lines that are not blank or whitespace-only
+                if not "!stripped!"=="" (
+                    echo !line! >> %OUT%
+                )
             )
             set /a header_lines+=1
         ) else (
-            echo !line! >> %OUT%
+            REM Only output lines that are not blank or whitespace-only
+            if not "!stripped!"=="" (
+                echo !line! >> %OUT%
+            )
         )
     )
     endlocal
