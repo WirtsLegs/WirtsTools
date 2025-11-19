@@ -1,4 +1,4 @@
-name: Build and Draft Release
+name: Build then Draft Release
 
 on:
   push:
