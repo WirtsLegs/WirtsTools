@@ -1,4 +1,4 @@
-name: Build then Draft Release
+name: Build and Draft Release
 
 on:
   push:
@@ -16,10 +16,22 @@ jobs:
       - name: Build Lua script
         run: bash build.sh
 
+      - name: Create Tag
+        id: create_tag
+        run: |
+          BRANCH_NAME="${GITHUB_REF##*/}"
+          TAG_NAME="${BRANCH_NAME}-auto-$(date +'%Y%m%d-%H%M%S')"
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git tag $TAG_NAME
+          git push origin $TAG_NAME
+          echo "tag_name=$TAG_NAME" >> $GITHUB_OUTPUT
+
       - name: Create Draft Release
         uses: softprops/action-gh-release@v2
         with:
           draft: true
           files: WirtsTools.lua
+          tag_name: ${{ steps.create_tag.outputs.tag_name }}
         env:
           GITHUB_TOKEN: ${{ secrets.GH_PAT }}
