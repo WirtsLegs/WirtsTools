@@ -8,6 +8,9 @@ on:
 
 jobs:
   build-release:
+    permissions:
+      contents: write
+      actions: write
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -19,14 +22,14 @@ jobs:
       - name: Create Tag
         id: create_tag
         env:
-          GH_PAT: ${{ secrets.GH_PAT }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           BRANCH_NAME="${GITHUB_REF##*/}"
           TAG_NAME="${BRANCH_NAME}-auto-$(date +'%Y%m%d-%H%M%S')"
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
           git tag $TAG_NAME
-          git remote set-url origin https://x-access-token:${GH_PAT}@github.com/${GITHUB_REPOSITORY}.git
+          git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git
           git push origin $TAG_NAME
           echo "tag_name=$TAG_NAME" >> $GITHUB_OUTPUT
 
@@ -37,4 +40,4 @@ jobs:
           files: WirtsTools.lua
           tag_name: ${{ steps.create_tag.outputs.tag_name }}
         env:
-          GITHUB_TOKEN: ${{ secrets.GH_PAT }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
