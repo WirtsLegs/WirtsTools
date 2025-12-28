@@ -297,6 +297,12 @@ do
         if not debug then
           local debug=false
         end
+        if not weapon then
+          return false
+        end
+        if weapon.isExist() == false then
+          return false
+        end
         local desc = weapon:getDesc()
         if not desc then
           -- If getDesc() returns nil for some reason, fail or pass as you see fit
