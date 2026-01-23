@@ -300,7 +300,7 @@ do
         if not weapon then
           return false
         end
-        if weapon.isExist() == false then
+        if weapon:isExist() == false then
           return false
         end
         local desc = weapon:getDesc()
