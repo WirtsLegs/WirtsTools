@@ -1,6 +1,6 @@
 ----------------
 --WirtsTools
---version 2.2.2
+--version 2.2.3
 --Directions: load this script as Do Script File, then call setup functions in a do script action for the features
 -- you wish to use (scroll to line 879 to see documentation on setup functions)
 -- Required Notice: Copyright WirtsLegs 2024, (https://github.com/WirtsLegs/WirtsTools)
